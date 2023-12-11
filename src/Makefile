@@ -12,9 +12,12 @@ ODIR = ../bin
 EXEDIR = ..
 
 # Liste des fichiers binaires
-OBJS = $(ODIR)/main.o $(ODIR)/stockage_creux.o $(ODIR)/quadrature.o $(ODIR)/recup_node.o $(ODIR)/numerics.o
+OBJS = $(ODIR)/main.o $(ODIR)/stockage_creux.o $(ODIR)/quadrature_P2.o $(ODIR)/quadrature.o $(ODIR)/recup_node.o $(ODIR)/numerics.o
 # Liste des fichiers mod
-MODS = stockage_matrice.mod quadrature_P1.mod to_vtk.mod numerics.mod
+MODS = stockage_matrice.mod quadrature_P1.mod quadrature_P2.mod to_vtk.mod numerics.mod
+
+# Librairies used
+LIBS = 
 
 # nom de l'executable
 PROG = elements_finis
@@ -28,13 +31,15 @@ clean:
 	rm $(ODIR)/*.o
 
 # Regles construction des fichiers binaires
-$(ODIR)/main.o: main.f90 $(ODIR)/stockage_creux.o $(ODIR)/quadrature.o $(ODIR)/recup_node.o $(ODIR)/numerics.o
+$(ODIR)/main.o: main.f90 stockage_creux.f90 quadrature_P2.f90 quadrature.f90 recup_node.f90 numerics.f90 #$(ODIR)/stockage_creux.o $(ODIR)/quadrature.o $(ODIR)/recup_node.o $(ODIR)/numerics.o
 	$(FC) -c $(FFLAGS) main.f90 -o $(ODIR)/main.o
 $(ODIR)/numerics.o: numerics.f90 
-	$(FC) -c $(FFLAGS) numerique.f90 -o $(ODIR)/numerique.o
-$(ODIR)/stockage_creux.o: stockage_creux.f90 $(ODIR)/quadrature.o $(ODIR)/numerics.o
+	$(FC) -c $(FFLAGS) numerics.f90 -o $(ODIR)/numerics.o
+$(ODIR)/stockage_creux.o: stockage_creux.f90 quadrature.f90 numerics.f90 #$(ODIR)/quadrature.o $(ODIR)/numerics.o
 	$(FC) -c $(FFLAGS) stockage_creux.f90 -o $(ODIR)/stockage_creux.o
-$(ODIR)/quadrature.o: quadrature.f90 $(ODIR)/numerics.o
+$(ODIR)/quadrature.o: quadrature.f90 numerics.f90 #$(ODIR)/numerics.o
 	$(FC) -c $(FFLAGS) quadrature.f90 -o $(ODIR)/quadrature.o
-$(ODIR)/recup_node.o: recup_node.f90 $(ODIR)/numerics.o
+$(ODIR)/recup_node.o: recup_node.f90 numerics.f90 #$(ODIR)/numerics.o
 	$(FC) -c $(FFLAGS) recup_node.f90 -o $(ODIR)/recup_node.o
+$(ODIR)/quadrature_P2.o: quadrature_P2.f90 quadrature.f90 numerics.f90 #$(ODIR)/numerics.o
+	$(FC) -c $(FFLAGS) quadrature_P2.f90 -o $(ODIR)/quadrature_P2.o

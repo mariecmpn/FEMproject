@@ -11,6 +11,11 @@ module stockage_matrice
 
     contains
 
+    !--------------------------------------------!
+    !   Remplissage vecteur NUBO des segments
+    !               du maillage
+    !--------------------------------------------!
+
     subroutine remplissage_NUBO_cher(NUBO, nb_triangle, connect, Nseg)
         ! remplissage du tableau NUBO avec l'algorithme simple mais cher
         integer, intent(in) :: nb_triangle
@@ -162,8 +167,13 @@ module stockage_matrice
         end do
     end subroutine remplissage_NUBO_peu_cher
 
+    !--------------------------------------------!
+    !       Procedures pour remplissage de
+    !      de la matrice A en stockage Morse
+    !--------------------------------------------!
 
     subroutine calcul_NcoefMat(NUBO, Nseg, NcoefMat, nb_element)
+        ! Subroutine pour le calcul du coefficient NCoefMat
         integer, intent(in) :: nb_element, Nseg
         integer, intent(inout) :: NcoefMat
         integer, dimension(2, Nseg), intent(in) :: NUBO
@@ -182,6 +192,7 @@ module stockage_matrice
 
 
     subroutine tableaux_assemblage_mat(Jposi, JvCell, Ncoefmat, nb_element, NUBO, Nseg)
+        ! Subroutine qui remplit les tableaux Jposi et JvCell
         integer, intent(in) :: nb_element, Nseg
         integer, intent(in) :: NcoefMat
         integer, dimension(2, Nseg), intent(in) :: NUBO
@@ -245,16 +256,13 @@ module stockage_matrice
 
 
     function AmatLoc(coor_triangle)
-        !integer, intent(in) :: m ! numero du triangle
+        ! Fonction qui calcule la matrice AmatLoc pour un triangle donne
         real(rp), dimension(2,3), intent(in) :: coor_triangle
         real(rp), dimension(3,3) :: AmatLoc
         integer :: ni, nj
 
         do ni=1,3 ! Boucle sur les 3 sommets numerotes localement
             do nj=1,3 ! idem
-                ! Recuperation des indices globaux des sommets du triangle
-
-                ! Recuperation des quantites necessaires au calcul de a_ij^m ...
                 ! Calcul de a_ij^m
                 call quadrature_triangle_A(AmatLoc(ni,nj), coor_triangle, ni, nj)
             end do 
@@ -263,6 +271,7 @@ module stockage_matrice
 
 
     subroutine stockage_morse(Tmat, Jposi, JvCell, coordonnees, connect, nb_element, nb_triangle, NcoefMat)
+        ! Subroutine pour le remplissage de Tmat
         integer, intent(in) :: nb_element, nb_triangle, NcoefMat
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
         integer, dimension(1:NcoefMat), intent(inout) :: Jposi
@@ -288,6 +297,7 @@ module stockage_matrice
 
 
     subroutine Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat)
+        ! Subroutine qui ajoute la contribution Aloc a Tmat aux bons endroits
         integer, intent(in) :: m, nb_element, nb_triangle, NcoefMat
         integer, dimension(3,nb_triangle), intent(in) :: connect
         real(rp), dimension(3,3), intent(in) :: Aloc
@@ -339,6 +349,7 @@ module stockage_matrice
 
 
     subroutine Ajout(ii, jj, coefA, Tmat, Jposi, JvCell, nb_element, NcoefMat)
+        ! Subroutine qui ajoute, pour les indices ii et jj, coefA dans Tmat 
         integer, intent(in) :: nb_element, NcoefMat
         integer, intent(in) :: ii, jj
         real(rp), intent(in) :: coefA
@@ -360,6 +371,6 @@ module stockage_matrice
             print*,"Probleme d’assemblage de la matrice A"
             stop 
         end if
-        end subroutine Ajout
+    end subroutine Ajout
 
 end module stockage_matrice

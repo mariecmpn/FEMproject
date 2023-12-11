@@ -154,8 +154,8 @@ module quadrature_P1
         do i = 1,3
             A1 = (j11*dphi_dx(coor(:,i),num_i)+j12*dphi_dx(coor(:,i),num_i))
             A2 = (j11*dphi_dx(coor(:,i),num_j)+j12*dphi_dx(coor(:,i),num_j))
-            A3 = (j21*dphi_dx(coor(:,i),num_i)+j22*dphi_dx(coor(:,i),num_i))
-            A4 = (j21*dphi_dx(coor(:,i),num_j)+j22*dphi_dx(coor(:,i),num_j))
+            A3 = (j21*dphi_dy(coor(:,i),num_i)+j22*dphi_dy(coor(:,i),num_i))
+            A4 = (j21*dphi_dy(coor(:,i),num_j)+j22*dphi_dy(coor(:,i),num_j))
             quad = quad + A1*A2 + A3*A4
         end do
         
