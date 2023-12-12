@@ -43,6 +43,28 @@ module quadrature_P1
         coor(:,3) = (/0._rp, 1._rp/) ! troisieme sommet
     end subroutine init_triangle_ref
 
+
+    real(rp) function det_Jac(coor_triangle)
+        ! fonction qui calcule le determinant de la matrice jacobienne de la transformee affine
+        real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
+        det_Jac = (coor_triangle(1,2)-coor_triangle(1,1))*(coor_triangle(2,3)-coor_triangle(2,1))  
+        det_Jac = det_Jac - (coor_triangle(1,3)-coor_triangle(1,1))*(coor_triangle(2,2)-coor_triangle(2,1))
+    end function det_Jac
+
+
+    real(rp) function inv_jac_P1(coor_triangle, k1, k2)
+        ! fonction qui calcule le terme (k1,k2) de la matrice inverse de la jacobienne
+        real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
+        integer :: k1, k2 ! numeros de ligne et colonne du terme de J^-1 qu'on veut recuperer
+        real(rp), dimension(2,2) :: inv_jac 
+        ! on remplit la matrice
+        inv_jac(1,1) = coor_triangle(2,3)-coor_triangle(2,1)
+        inv_jac(1,2) = coor_triangle(1,1)-coor_triangle(1,3)
+        inv_jac(2,1) = coor_triangle(2,1)-coor_triangle(2,2)
+        inv_jac(2,2) = coor_triangle(1,2)-coor_triangle(1,1)
+        inv_jac_P1 = inv_jac(k1,k2)*det_Jac(coor_triangle)
+    end function inv_jac_P1
+
     !--------------------------------------------!
     !       Fonctions de base simplexe de ref
     !             et leurs derivees
@@ -88,34 +110,16 @@ module quadrature_P1
     end if
     end function dphi_dy
 
-    real(rp) function det_Jac(coor_triangle)
-        ! fonction qui calcule le determinant de la matrice jacobienne de la transformee affine
-        real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
-        det_Jac = (coor_triangle(1,2)-coor_triangle(1,1))*(coor_triangle(2,3)-coor_triangle(2,1))  
-        det_Jac = det_Jac - (coor_triangle(1,3)-coor_triangle(1,1))*(coor_triangle(2,2)-coor_triangle(2,1))
-    end function det_Jac
-
-    real(rp) function inv_jac_P1(coor_triangle, k1, k2)
-        ! fonction qui calcule le terme (k1,k2) de la matrice inverse de la jacobienne
-        real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
-        integer :: k1, k2 ! numeros de ligne et colonne du terme de J^-1 qu'on veut recuperer
-        real(rp), dimension(2,2) :: inv_jac 
-        ! on remplit la matrice
-        inv_jac(1,1) = coor_triangle(2,3)-coor_triangle(2,1)
-        inv_jac(1,2) = coor_triangle(1,1)-coor_triangle(1,3)
-        inv_jac(2,1) = coor_triangle(2,1)-coor_triangle(2,2)
-        inv_jac(2,2) = coor_triangle(1,2)-coor_triangle(1,1)
-        inv_jac_P1 = inv_jac(k1,k2)*det_Jac(coor_triangle)
-    end function inv_jac_P1
 
     !--------------------------------------------!
     !       Formules de quadrature
     !--------------------------------------------!
 
-    subroutine quadrature_triangle_L(quad, coor_triangle, num)
+
+    subroutine quadrature_triangle_L(quad, coor_triangle)
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
-        integer, intent(in) :: num ! numerotation locale du noeud
+        !integer, intent(in) :: num ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor, coor_ref
         !integer :: j
 
@@ -125,15 +129,16 @@ module quadrature_P1
         !on transforme les sommets du triangle de reference en sommets de notre triangle
         call transformee_triangle(coor, coor_triangle) 
 
-        quad = f(coor(:,1)) * phi(coor_ref(:,1),num) + f(coor(:,2)) * phi(coor_ref(:,2),num) + f(coor(:,3)) * phi(coor_ref(:,3),num) ! quadrature sans le det de la jacob. et le poids de quadrature
+        !quad = f(coor(:,1)) * phi(coor_ref(:,1),1) + f(coor(:,2)) * phi(coor_ref(:,2),2) + f(coor(:,3)) * phi(coor_ref(:,3),3) ! quadrature sans le det de la jacob. et le poids de quadrature
+        quad = f(coor(:,1)) + f(coor(:,2)) + f(coor(:,3))
         quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp) ! on multiplie le tout pour avoir notre integrale approchee
     end subroutine quadrature_triangle_L
 
 
-    subroutine quadrature_triangle_A(quad, coor_triangle, num_i, num_j)
+    subroutine quadrature_triangle_A(quad, coor_triangle)!, num_i, num_j)
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
-        integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
+        !integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor
         real(rp) :: poids
         integer :: i
@@ -152,11 +157,12 @@ module quadrature_P1
 
         quad = 0._rp
         do i = 1,3
-            A1 = (j11*dphi_dx(coor(:,i),num_i)+j12*dphi_dx(coor(:,i),num_i))
-            A2 = (j11*dphi_dx(coor(:,i),num_j)+j12*dphi_dx(coor(:,i),num_j))
-            A3 = (j21*dphi_dy(coor(:,i),num_i)+j22*dphi_dy(coor(:,i),num_i))
-            A4 = (j21*dphi_dy(coor(:,i),num_j)+j22*dphi_dy(coor(:,i),num_j))
-            quad = quad + A1*A2 + A3*A4
+            A1 = (j11*dphi_dx(coor(:,i),i)+j12*dphi_dx(coor(:,i),i))
+            !A2 = (j11*dphi_dx(coor(:,i),num_j)+j12*dphi_dx(coor(:,i),num_j))
+            A3 = (j21*dphi_dy(coor(:,i),i)+j22*dphi_dy(coor(:,i),i))
+            !A4 = (j21*dphi_dy(coor(:,i),num_j)+j22*dphi_dy(coor(:,i),num_j))
+            !quad = quad + A1*A2 + A3*A4
+            quad = quad+A1**2+A3**2
         end do
         
         ! on multiplie le tout par le poids
@@ -191,7 +197,7 @@ module quadrature_P1
                     do k = 1,2
                         coor_triangle(k,j) = coordonnees(S(j),k)
                     end do
-                    call quadrature_triangle_L(quad, coor_triangle, j)
+                    call quadrature_triangle_L(quad, coor_triangle)
                     L_avec_frontiere(S(j)) = L_avec_frontiere(S(j)) + quad
                 end if
                 !write(6,*) L_avec_frontiere(S(j))
@@ -233,7 +239,7 @@ module quadrature_P1
                     do nj = 1,3
                         j = connect(nj,m)
                         if (positions(j) /= 1) then
-                            call quadrature_triangle_A(quad, coor_triangle, ni, nj)
+                            call quadrature_triangle_A(quad, coor_triangle)!, ni, nj)
                             !write(6,*) quad
                             A_avec_frontiere(i,j) = A_avec_frontiere(i,j) + quad
                         end if

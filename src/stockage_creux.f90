@@ -264,7 +264,7 @@ module stockage_matrice
         do ni=1,3 ! Boucle sur les 3 sommets numerotes localement
             do nj=1,3 ! idem
                 ! Calcul de a_ij^m
-                call quadrature_triangle_A(AmatLoc(ni,nj), coor_triangle, ni, nj)
+                call quadrature_triangle_A(AmatLoc(ni,nj), coor_triangle)!, ni, nj)
             end do 
         end do
     end function AmatLoc
