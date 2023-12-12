@@ -17,14 +17,14 @@ OBJS = $(ODIR)/main.o $(ODIR)/stockage_creux.o $(ODIR)/quadrature_P2.o $(ODIR)/q
 MODS = stockage_matrice.mod quadrature_P1.mod quadrature_P2.mod to_vtk.mod numerics.mod
 
 # Librairies used
-LIBS = 
+LIBS = -llapack
 
 # nom de l'executable
 PROG = elements_finis
 
 # regle de compilation pour le fichier executable final
 $(PROG) : $(OBJS)
-	$(CC) $(FFLAGS) $(OBJS) -o $(EXEDIR)/$(PROG)
+	$(CC) $(FFLAGS) $(OBJS) $(LIBS) -o $(EXEDIR)/$(PROG)
 
 # regle clean pour supprimer les fichiers binaires et executable
 clean:
@@ -35,7 +35,7 @@ $(ODIR)/main.o: main.f90 stockage_creux.f90 quadrature_P2.f90 quadrature.f90 rec
 	$(FC) -c $(FFLAGS) main.f90 -o $(ODIR)/main.o
 $(ODIR)/numerics.o: numerics.f90 
 	$(FC) -c $(FFLAGS) numerics.f90 -o $(ODIR)/numerics.o
-$(ODIR)/stockage_creux.o: stockage_creux.f90 quadrature.f90 numerics.f90 #$(ODIR)/quadrature.o $(ODIR)/numerics.o
+$(ODIR)/stockage_creux.o: stockage_creux.f90 quadrature_P2.f90 quadrature.f90 numerics.f90 #$(ODIR)/quadrature.o $(ODIR)/numerics.o
 	$(FC) -c $(FFLAGS) stockage_creux.f90 -o $(ODIR)/stockage_creux.o
 $(ODIR)/quadrature.o: quadrature.f90 numerics.f90 #$(ODIR)/numerics.o
 	$(FC) -c $(FFLAGS) quadrature.f90 -o $(ODIR)/quadrature.o

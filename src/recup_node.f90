@@ -103,7 +103,7 @@ subroutine recup_nodeel(nomfic, coord, p, t, n_pt, n_tri)
   CLOSE(50)
 end subroutine recup_nodeel
 
-subroutine points_frontiere (nb_frontiere, n_pt, p, dim_mat, points_int)
+subroutine points_frontiere(nb_frontiere, n_pt, p, dim_mat, points_int)
    ! On recupere le nombre de points sur la frontiere
    integer, intent(inout) :: nb_frontiere
    integer, intent(in) :: n_pt

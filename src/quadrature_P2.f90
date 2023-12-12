@@ -6,8 +6,8 @@ module quadrature_P2
     contains
 
     !--------------------------------------------!
-    !       Fonctions de base simplexe de ref
-    !             et leurs derivees
+    !     Fonctions de base simplexe de ref
+    !           et leurs derivees
     !--------------------------------------------!
 
     real(rp) function phi_P2(coor,i)
@@ -103,10 +103,10 @@ module quadrature_P2
     end subroutine quadrature_triangle_L_P2
 
 
-    subroutine quadrature_triangle_A_P2(quad, coor_triangle, num_i, num_j)
+    subroutine quadrature_triangle_A_P2(quad, coor_triangle)!, num_i, num_j)
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
-        integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
+        !integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor
         real(rp), dimension(2,3) :: coor_milieu
         real(rp) :: poids
@@ -128,19 +128,22 @@ module quadrature_P2
 
         quad = 0._rp
         do i = 1,3 ! pour les sommets
-            A1 = (j11*dphi_dx_P2(coor(:,i),num_i)+j12*dphi_dx_P2(coor(:,i),num_i))
-            A2 = (j11*dphi_dx_P2(coor(:,i),num_j)+j12*dphi_dx_P2(coor(:,i),num_j))
-            A3 = (j21*dphi_dy_P2(coor(:,i),num_i)+j22*dphi_dy_P2(coor(:,i),num_i))
-            A4 = (j21*dphi_dy_P2(coor(:,i),num_j)+j22*dphi_dy_P2(coor(:,i),num_j))
-            quad = quad + A1*A2 + A3*A4
+            A1 = (j11*dphi_dx_P2(coor(:,i),i)+j12*dphi_dx_P2(coor(:,i),i))
+            !A2 = (j11*dphi_dx_P2(coor(:,i),num_j)+j12*dphi_dx_P2(coor(:,i),num_j))
+            A3 = (j21*dphi_dy_P2(coor(:,i),i)+j22*dphi_dy_P2(coor(:,i),i))
+            !A4 = (j21*dphi_dy_P2(coor(:,i),num_j)+j22*dphi_dy_P2(coor(:,i),num_j))
+            quad = quad + A1**2 + A3**2
+            A1 = (j11*dphi_dx_P2(coor_milieu(:,i),i+3)+j12*dphi_dx_P2(coor_milieu(:,i),i+3))
+            A3 = (j21*dphi_dy_P2(coor_milieu(:,i),i+3)+j22*dphi_dy_P2(coor_milieu(:,i),i+3))
+            quad = quad + A1**2 + A3**2
         end do ! puis pour les points milieux
-        do i = 1,3
-            A1 = (j11*dphi_dx_P2(coor_milieu(:,i),num_i)+j12*dphi_dx_P2(coor_milieu(:,i),num_i))
-            A2 = (j11*dphi_dx_P2(coor_milieu(:,i),num_j)+j12*dphi_dx_P2(coor_milieu(:,i),num_j))
-            A3 = (j21*dphi_dy_P2(coor_milieu(:,i),num_i)+j22*dphi_dy_P2(coor_milieu(:,i),num_i))
-            A4 = (j21*dphi_dy_P2(coor_milieu(:,i),num_j)+j22*dphi_dy_P2(coor_milieu(:,i),num_j))
-            quad = quad + A1*A2 + A3*A4
-        end do
+        !do i = 1,3
+        !    A1 = (j11*dphi_dx_P2(coor_milieu(:,i),num_i)+j12*dphi_dx_P2(coor_milieu(:,i),num_i))
+        !    A2 = (j11*dphi_dx_P2(coor_milieu(:,i),num_j)+j12*dphi_dx_P2(coor_milieu(:,i),num_j))
+        !    A3 = (j21*dphi_dy_P2(coor_milieu(:,i),num_i)+j22*dphi_dy_P2(coor_milieu(:,i),num_i))
+        !    A4 = (j21*dphi_dy_P2(coor_milieu(:,i),num_j)+j22*dphi_dy_P2(coor_milieu(:,i),num_j))
+        !    quad = quad + A1*A2 + A3*A4
+        !end do
         
         ! on multiplie le tout par le poids
         quad = quad*poids

@@ -1,6 +1,7 @@
 module stockage_matrice
     use numerics
     use quadrature_P1
+    use quadrature_P2
     IMPLICIT NONE
 
     ! Declaration d’un type maillon
@@ -168,8 +169,8 @@ module stockage_matrice
     end subroutine remplissage_NUBO_peu_cher
 
     !--------------------------------------------!
-    !       Procedures pour remplissage de
-    !      de la matrice A en stockage Morse
+    !     Procedures pour le stockage Morse
+    !               de la matrice A
     !--------------------------------------------!
 
     subroutine calcul_NcoefMat(NUBO, Nseg, NcoefMat, nb_element)
@@ -197,8 +198,8 @@ module stockage_matrice
         integer, intent(in) :: NcoefMat
         integer, dimension(2, Nseg), intent(in) :: NUBO
         !real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
-        integer, dimension(1:NcoefMat), intent(inout) :: Jposi
-        integer, dimension(1:nb_element+1), intent(inout) :: JvCell
+        integer, dimension(1:NcoefMat), intent(inout) :: JvCell
+        integer, dimension(1:nb_element+1), intent(inout) :: Jposi
         integer, dimension(:), allocatable :: IndPL
         integer :: iseg, js, is, jv, kv, tmp
 
@@ -264,7 +265,7 @@ module stockage_matrice
         do ni=1,3 ! Boucle sur les 3 sommets numerotes localement
             do nj=1,3 ! idem
                 ! Calcul de a_ij^m
-                call quadrature_triangle_A(AmatLoc(ni,nj), coor_triangle)!, ni, nj)
+                call quadrature_triangle_A_P2(AmatLoc(ni,nj), coor_triangle)!, ni, nj)
             end do 
         end do
     end function AmatLoc
@@ -274,8 +275,8 @@ module stockage_matrice
         ! Subroutine pour le remplissage de Tmat
         integer, intent(in) :: nb_element, nb_triangle, NcoefMat
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
-        integer, dimension(1:NcoefMat), intent(inout) :: Jposi
-        integer, dimension(1:nb_element+1), intent(inout) :: JvCell
+        integer, dimension(1:NcoefMat), intent(inout) :: JvCell
+        integer, dimension(1:nb_element+1), intent(inout) :: Jposi
         real(rp), dimension(nb_element, 2), intent(in) :: coordonnees
         integer, dimension(3,nb_triangle), intent(in) :: connect
         real(rp), dimension(3,3) :: Aloc
@@ -302,8 +303,8 @@ module stockage_matrice
         integer, dimension(3,nb_triangle), intent(in) :: connect
         real(rp), dimension(3,3), intent(in) :: Aloc
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
-        integer, dimension(1:NcoefMat), intent(in) :: Jposi
-        integer, dimension(1:nb_element+1), intent(in) :: JvCell
+        integer, dimension(1:NcoefMat), intent(in) :: JvCell
+        integer, dimension(1:nb_element+1), intent(in) :: Jposi
         integer :: i,j,k
         ! On recupere les numeros globaux des sommets du triangle 
         i = connect(1,m)
@@ -354,14 +355,14 @@ module stockage_matrice
         integer, intent(in) :: ii, jj
         real(rp), intent(in) :: coefA
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
-        integer, dimension(1:NcoefMat), intent(in) :: Jposi
-        integer, dimension(1:nb_element+1), intent(in) :: JvCell
+        integer, dimension(1:NcoefMat), intent(in) :: JvCell
+        integer, dimension(1:nb_element+1), intent(in) :: Jposi
         integer :: j
         logical :: trouver
 
         trouver=.false.
         do j = Jposi(ii),Jposi(ii+1)-1 
-                if (JvCell(j) == jj) then
+            if (JvCell(j) == jj) then
                 Tmat(j) = Tmat(j)+coefA
                 trouver = .true.
                 exit ! on a ajoute notre contribution donc on peut arreter de chercher ou la mettre
@@ -372,5 +373,40 @@ module stockage_matrice
             stop 
         end if
     end subroutine Ajout
+
+    !--------------------------------------------!
+    !     Reconstruction de A grace a son
+    !               stockage Morse
+    !--------------------------------------------!
+
+    subroutine reconstruction_A_morse(A, Tmat, Jposi, JvCell, points_int, nb_element, NcoefMat, dim_mat)
+        integer, intent(in) :: nb_element, NcoefMat, dim_mat
+        real(rp), dimension(1:NcoefMat), intent(in) :: Tmat
+        integer, dimension(1:NcoefMat), intent(in) :: JvCell
+        integer, dimension(1:nb_element+1), intent(in) :: Jposi
+        real(rp), dimension(dim_mat,dim_mat), intent(inout) :: A
+        real(rp), dimension(nb_element,nb_element) :: A_avec_frontiere
+        integer, dimension(1:dim_mat), intent(in) :: points_int
+        integer :: i,j,jj,nb_non0
+
+        A_avec_frontiere(:,:) = 0._rp
+        jj = 1 
+        do i = 1,nb_element
+            ! On regarde le nombre de termes non nuls pour la ligne i
+            nb_non0 = Jposi(i+1) - Jposi(i)
+            !print*, nb_non0
+            do j = 1,nb_non0 
+                A_avec_frontiere(i,JvCell(jj)) = Tmat(jj) ! puis on remplit au bon endroit pour chaque terme non nul
+                jj = jj+1
+            end do
+        end do
+
+        ! Enfin on ne garde que les points interieurs
+        do i = 1,dim_mat
+            do j = 1,dim_mat
+                A(i,j) = A_avec_frontiere(points_int(i),points_int(j))
+            end do
+        end do
+    end subroutine reconstruction_A_morse
 
 end module stockage_matrice
