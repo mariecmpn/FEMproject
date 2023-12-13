@@ -11,6 +11,7 @@ module quadrature_P1
     real(rp) function f(coor)
         real(rp), dimension(2) :: coor
         f = -2._rp * (coor(1)**2-coor(1) + coor(2)**2-coor(2))
+        !f = 2._rp
     end function f
 
     real(rp) function u_ex(x,y)
@@ -52,18 +53,19 @@ module quadrature_P1
     end function det_Jac
 
 
-    real(rp) function inv_jac_P1(coor_triangle, k1, k2)
+    real(rp) function inv_jac(coor_triangle, k1, k2)
         ! fonction qui calcule le terme (k1,k2) de la matrice inverse de la jacobienne
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
         integer :: k1, k2 ! numeros de ligne et colonne du terme de J^-1 qu'on veut recuperer
-        real(rp), dimension(2,2) :: inv_jac 
+        real(rp), dimension(2,2) :: inv_J 
         ! on remplit la matrice
-        inv_jac(1,1) = coor_triangle(2,3)-coor_triangle(2,1)
-        inv_jac(1,2) = coor_triangle(1,1)-coor_triangle(1,3)
-        inv_jac(2,1) = coor_triangle(2,1)-coor_triangle(2,2)
-        inv_jac(2,2) = coor_triangle(1,2)-coor_triangle(1,1)
-        inv_jac_P1 = inv_jac(k1,k2)*det_Jac(coor_triangle)
-    end function inv_jac_P1
+        inv_J(1,1) = coor_triangle(2,3)-coor_triangle(2,1)
+        inv_J(1,2) = coor_triangle(1,1)-coor_triangle(1,3)
+        inv_J(2,1) = coor_triangle(2,1)-coor_triangle(2,2)
+        inv_J(2,2) = coor_triangle(1,2)-coor_triangle(1,1)
+        ! pus on renvoit seulement la valeur qui nous interesse 
+        inv_jac = inv_J(k1,k2)*det_Jac(coor_triangle)
+    end function inv_jac
 
     !--------------------------------------------!
     !       Fonctions de base simplexe de ref
@@ -116,145 +118,60 @@ module quadrature_P1
     !--------------------------------------------!
 
 
-    subroutine quadrature_triangle_L(quad, coor_triangle)
+    subroutine quadrature_triangle_L(quad, coor_triangle, num)
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
-        !integer, intent(in) :: num ! numerotation locale du noeud
+        integer, intent(in) :: num ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor, coor_ref
         !integer :: j
 
-        call init_triangle_ref(coor)
-        coor_ref(:,:) = coor(:,:)
+        quad = 0._rp
+        !call init_triangle_ref(coor)
+        !coor_ref(:,:) = coor(:,:)
 
         !on transforme les sommets du triangle de reference en sommets de notre triangle
-        call transformee_triangle(coor, coor_triangle) 
+        !call transformee_triangle(coor, coor_triangle) 
 
-        !quad = f(coor(:,1)) * phi(coor_ref(:,1),1) + f(coor(:,2)) * phi(coor_ref(:,2),2) + f(coor(:,3)) * phi(coor_ref(:,3),3) ! quadrature sans le det de la jacob. et le poids de quadrature
-        quad = f(coor(:,1)) + f(coor(:,2)) + f(coor(:,3))
+        !quad = f(coor(:,1)) * phi(coor_ref(:,1),num) + f(coor(:,2)) * phi(coor_ref(:,2),num) + f(coor(:,3)) * phi(coor_ref(:,3),num) ! quadrature sans le det de la jacob. et le poids de quadrature
+        quad = f(coor_triangle(:,num))
+
         quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp) ! on multiplie le tout pour avoir notre integrale approchee
     end subroutine quadrature_triangle_L
 
 
-    subroutine quadrature_triangle_A(quad, coor_triangle)!, num_i, num_j)
+    subroutine quadrature_triangle_A(quad, coor_triangle, num_i, num_j)
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
-        !integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
+        integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor
         real(rp) :: poids
         integer :: i
         real(rp) :: A1,A2,A3,A4
         real(rp) :: j11, j12, j21, j22
 
-        poids = (1._rp/6._rp)*abs(det_Jac(coor_triangle))
+        quad = 0._rp
+        poids = (1._rp/6._rp)
         ! on recupere les termes de l'inverse de la matrice jacobienne
-        j11 = inv_jac_P1(coor_triangle,1,1)
-        j12 = inv_jac_P1(coor_triangle,1,2)
-        j21 = inv_jac_P1(coor_triangle,2,1)
-        j22 = inv_jac_P1(coor_triangle,2,2)
+        j11 = inv_jac(coor_triangle,1,1)
+        j12 = inv_jac(coor_triangle,1,2)
+        j21 = inv_jac(coor_triangle,2,1)
+        j22 = inv_jac(coor_triangle,2,2)
 
         ! on recupere notre triangle de reference
         call init_triangle_ref(coor)
 
-        quad = 0._rp
         do i = 1,3
-            A1 = (j11*dphi_dx(coor(:,i),i)+j12*dphi_dx(coor(:,i),i))
-            !A2 = (j11*dphi_dx(coor(:,i),num_j)+j12*dphi_dx(coor(:,i),num_j))
-            A3 = (j21*dphi_dy(coor(:,i),i)+j22*dphi_dy(coor(:,i),i))
-            !A4 = (j21*dphi_dy(coor(:,i),num_j)+j22*dphi_dy(coor(:,i),num_j))
-            !quad = quad + A1*A2 + A3*A4
-            quad = quad+A1**2+A3**2
+            A1 = (j11*dphi_dx(coor(:,i),num_i)+j21*dphi_dx(coor(:,i),num_i))
+            A2 = (j11*dphi_dx(coor(:,i),num_j)+j21*dphi_dx(coor(:,i),num_j))
+            A3 = (j12*dphi_dy(coor(:,i),num_i)+j22*dphi_dy(coor(:,i),num_i))
+            A4 = (j12*dphi_dy(coor(:,i),num_j)+j22*dphi_dy(coor(:,i),num_j))
+            quad = quad + A1*A2 + A3*A4
         end do
         
         ! on multiplie le tout par le poids
-        quad = quad*poids
+        quad = quad*poids*abs(det_Jac(coor_triangle))
     end subroutine quadrature_triangle_A
 
-    !--------------------------------------------!
-    !           Remplissage de A et L
-    !--------------------------------------------!
-
-    subroutine remplissage_L(L, coordonnees, positions, connect, nb_element, nb_triangle, dim_mat, points_int)
-        integer, intent(in) :: nb_element, nb_triangle, dim_mat
-        real(rp), dimension(dim_mat), intent(inout) :: L
-        real(rp), dimension(nb_element,2), intent(in) :: coordonnees
-        integer, dimension(nb_element), intent(in) :: positions
-        integer, dimension(3,nb_triangle), intent(in) :: connect
-        integer, dimension(dim_mat), intent(in) :: points_int
-        integer, dimension(3) :: S ! positions des trois sommets
-        real(rp), dimension(nb_element) :: L_avec_frontiere
-        integer :: i, j, k ! pour boucle do
-        real(rp) :: quad
-        real(rp), dimension(2,3) :: coor_triangle
-
-        ! On remplit L avec les points sur la frontiere d'abord
-        L_avec_frontiere(:) = 0._rp
-        do i = 1,nb_triangle
-            S(1) = connect(1,i)
-            S(2) = connect(2,i)
-            S(3) = connect(3,i)
-            do j = 1,3
-                if (positions(S(j)) /= 1) then
-                    do k = 1,2
-                        coor_triangle(k,j) = coordonnees(S(j),k)
-                    end do
-                    call quadrature_triangle_L(quad, coor_triangle)
-                    L_avec_frontiere(S(j)) = L_avec_frontiere(S(j)) + quad
-                end if
-                !write(6,*) L_avec_frontiere(S(j))
-            end do
-        end do
-
-        ! Puis on enleve les lignes avec les points du bord pour L
-        do i = 1,dim_mat
-            L(i) = L_avec_frontiere(points_int(i))
-       end do
-    end subroutine remplissage_L
-
-
-    subroutine remplissage_A(A, coordonnees, positions, connect, nb_element, nb_triangle, dim_mat, points_int)
-        integer, intent(in) :: nb_element, nb_triangle, dim_mat
-        real(rp), dimension(dim_mat, dim_mat), intent(inout) :: A
-        real(rp), dimension(nb_element,2), intent(in) :: coordonnees
-        integer, dimension(nb_element), intent(in) :: positions
-        integer, dimension(3,nb_triangle), intent(in) :: connect
-        integer, dimension(dim_mat), intent(in) :: points_int
-        real(rp), dimension(nb_element, nb_element) :: A_avec_frontiere
-        integer :: ni, nj, m ! pour boucle do
-        integer :: i, j
-        real(rp) :: quad
-        real(rp), dimension(2,3) :: coor_triangle
-
-        ! on fait le calcul
-        A_avec_frontiere(:,:) = 0._rp
-        do m = 1,nb_triangle ! boucle sur le nombre de triangles
-            ! on recupere les coordonnees des sommets du triangle dans lequel on travaille
-            do i = 1,3
-                do j = 1,2
-                    coor_triangle(j,i) = coordonnees(connect(i,m),j)
-                end do
-            end do
-            do ni = 1,3
-                i = connect(ni,m)
-                if (positions(i) /= 1) then
-                    do nj = 1,3
-                        j = connect(nj,m)
-                        if (positions(j) /= 1) then
-                            call quadrature_triangle_A(quad, coor_triangle)!, ni, nj)
-                            !write(6,*) quad
-                            A_avec_frontiere(i,j) = A_avec_frontiere(i,j) + quad
-                        end if
-                    end do
-                end if
-            end do
-        end do
-
-        ! Puis on enleve les lignes et colonnes avec les points du bord
-        do i = 1,dim_mat
-            do j = 1,dim_mat
-                A(i,j) = A_avec_frontiere(points_int(i),points_int(j))
-            end do
-        end do
-    end subroutine remplissage_A
 
     !--------------------------------------------!
     !           Post-traitement

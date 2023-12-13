@@ -78,10 +78,10 @@ module quadrature_P2
     !       Formules de quadrature
     !--------------------------------------------!
 
-    subroutine quadrature_triangle_L_P2(quad, coor_triangle, num)
+    subroutine quadrature_triangle_L_P2(quad, coor_triangle)!, num)
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
-        integer, intent(in) :: num ! numerotation locale du noeud
+        !integer, intent(in) :: num ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor, coor_ref
         real(rp), dimension(2,3) :: coor_milieu_ref, coor_milieu
         !integer :: j
@@ -96,17 +96,18 @@ module quadrature_P2
         call transformee_triangle(coor, coor_triangle) 
         call transformee_triangle(coor_milieu, coor_triangle)
 
-        quad = f(coor(:,1)) * phi(coor_ref(:,1),num) + f(coor(:,2)) * phi(coor_ref(:,2),num) + f(coor(:,3)) * phi(coor_ref(:,3),num) ! sommets
-        quad = quad + f(coor_milieu(:,1)) * phi(coor_milieu_ref(:,1),num) 
-        quad = quad + f(coor_milieu(:,1)) * phi(coor_milieu_ref(:,1),num) 
+        quad = f(coor(:,1)) * phi(coor_ref(:,1),1) + f(coor(:,2)) * phi(coor_ref(:,2),2) + f(coor(:,3)) * phi(coor_ref(:,3),3) ! sommets
+        quad = quad + f(coor_milieu(:,1)) * phi(coor_milieu_ref(:,1),4) 
+        quad = quad + f(coor_milieu(:,2)) * phi(coor_milieu_ref(:,2),5) 
+        quad = quad + f(coor_milieu(:,3)) * phi(coor_milieu_ref(:,3),6) 
         quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/12._rp) ! on multiplie le tout pour avoir notre integrale approchee
     end subroutine quadrature_triangle_L_P2
 
 
-    subroutine quadrature_triangle_A_P2(quad, coor_triangle)!, num_i, num_j)
+    subroutine quadrature_triangle_A_P2(quad, coor_triangle, num_i, num_j)
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
-        !integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
+        integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor
         real(rp), dimension(2,3) :: coor_milieu
         real(rp) :: poids
@@ -116,10 +117,10 @@ module quadrature_P2
 
         poids = (1._rp/12._rp)*abs(det_Jac(coor_triangle))
         ! on recupere les termes de l'inverse de la matrice jacobienne
-        j11 = inv_jac_P1(coor_triangle,1,1)
-        j12 = inv_jac_P1(coor_triangle,1,2)
-        j21 = inv_jac_P1(coor_triangle,2,1)
-        j22 = inv_jac_P1(coor_triangle,2,2)
+        j11 = inv_jac(coor_triangle,1,1)
+        j12 = inv_jac(coor_triangle,1,2)
+        j21 = inv_jac(coor_triangle,2,1)
+        j22 = inv_jac(coor_triangle,2,2)
 
         ! on recupere notre triangle de reference
         call init_triangle_ref(coor)
@@ -128,13 +129,13 @@ module quadrature_P2
 
         quad = 0._rp
         do i = 1,3 ! pour les sommets
-            A1 = (j11*dphi_dx_P2(coor(:,i),i)+j12*dphi_dx_P2(coor(:,i),i))
-            !A2 = (j11*dphi_dx_P2(coor(:,i),num_j)+j12*dphi_dx_P2(coor(:,i),num_j))
-            A3 = (j21*dphi_dy_P2(coor(:,i),i)+j22*dphi_dy_P2(coor(:,i),i))
-            !A4 = (j21*dphi_dy_P2(coor(:,i),num_j)+j22*dphi_dy_P2(coor(:,i),num_j))
-            quad = quad + A1**2 + A3**2
-            A1 = (j11*dphi_dx_P2(coor_milieu(:,i),i+3)+j12*dphi_dx_P2(coor_milieu(:,i),i+3))
-            A3 = (j21*dphi_dy_P2(coor_milieu(:,i),i+3)+j22*dphi_dy_P2(coor_milieu(:,i),i+3))
+            A1 = (j11*dphi_dx_P2(coor(:,i),num_i)+j12*dphi_dx_P2(coor(:,i),num_i))
+            A2 = (j11*dphi_dx_P2(coor(:,i),num_j)+j12*dphi_dx_P2(coor(:,i),num_j))
+            A3 = (j21*dphi_dy_P2(coor(:,i),num_i)+j22*dphi_dy_P2(coor(:,i),num_i))
+            A4 = (j21*dphi_dy_P2(coor(:,i),num_j)+j22*dphi_dy_P2(coor(:,i),num_j))
+            quad = quad + A1*A2 + A3*A4
+            A1 = (j11*dphi_dx_P2(coor_milieu(:,i),num_i+3)+j12*dphi_dx_P2(coor_milieu(:,i),num_i+3))
+            A3 = (j21*dphi_dy_P2(coor_milieu(:,i),num_j+3)+j22*dphi_dy_P2(coor_milieu(:,i),num_j+3))
             quad = quad + A1**2 + A3**2
         end do ! puis pour les points milieux
         !do i = 1,3
