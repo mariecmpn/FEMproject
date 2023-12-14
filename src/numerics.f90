@@ -5,4 +5,5 @@ module numerics
     IMPLICIT NONE
 
     integer, parameter :: rp = real64
+    real(rp), parameter :: pi = acos(-1._rp)
 end module numerics

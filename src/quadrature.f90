@@ -10,13 +10,13 @@ module quadrature_P1
 
     real(rp) function f(coor)
         real(rp), dimension(2) :: coor
-        f = -2._rp * (coor(1)**2-coor(1) + coor(2)**2-coor(2))
+        f = 0.5_rp*pi*pi*sin(pi*coor(1))*sin(pi*coor(2))
         !f = 2._rp
     end function f
 
     real(rp) function u_ex(x,y)
         real(rp) :: x,y
-        u_ex = x*y*(x-1._rp)*(y-1._rp)
+        u_ex = 0.25_rp*sin(pi*x)*sin(pi*y)
     end function u_ex
 
     !--------------------------------------------!
