@@ -103,7 +103,7 @@ subroutine recup_nodeel(nomfic, coord, p, t, n_pt, n_tri)
   CLOSE(50)
 end subroutine recup_nodeel
 
-subroutine points_frontiere(nb_frontiere, n_pt, p, dim_mat, points_int)
+subroutine points_frontiere(nb_frontiere, n_pt, p, dim_mat, points_int)!, coor_int)
    ! On recupere le nombre de points sur la frontiere
    integer, intent(inout) :: nb_frontiere
    integer, intent(in) :: n_pt
@@ -111,6 +111,7 @@ subroutine points_frontiere(nb_frontiere, n_pt, p, dim_mat, points_int)
    integer, intent(inout) :: dim_mat
    integer :: i,j
    integer, dimension(:), allocatable, intent(inout) :: points_int
+   !integer, dimension(:), allocatable, intent(inout) :: coor_int
 
    ! on compte le nombre de points sur la frontiere
    nb_frontiere = 0
@@ -127,13 +128,14 @@ subroutine points_frontiere(nb_frontiere, n_pt, p, dim_mat, points_int)
    do i = 1,n_pt
       if (p(i) /= 1) then
          points_int(j) = i
+         !coor_int(j,1) =  
          j = j + 1
       end if
    end do
 end subroutine points_frontiere
 
 
-SUBROUTINE CellVertexVtk_n(DATA, Mesh, PbName)
+SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
 
    TYPE(Donnees)   , INTENT(in)     :: DATA ! 
    TYPE(MeshDef)   , INTENT(in)     :: Mesh !
@@ -172,7 +174,7 @@ SUBROUTINE CellVertexVtk_n(DATA, Mesh, PbName)
 
    DO is = 1,Mesh%Npoint
       !if (flag_topo == 1) then
-      WRITE(61,'(E13.7,2x,E13.7,2x,E13.7)') Mesh%coor(1,is), Mesh%coor(2,is),  DATA%Z(is)
+      WRITE(61,'(E13.7,2x,E13.7,2x,E13.7)') Mesh%coor(1,is), Mesh%coor(2,is), DATA%Z(is)
       !else
          !WRITE(61,'(E13.7,2x,E13.7,2x,E13.7)') Mesh%coor(1,is), Mesh%coor(2,is),  Var%Ua(1,is) + DATA%Z(is)
       !end if
@@ -217,7 +219,7 @@ SUBROUTINE CellVertexVtk_n(DATA, Mesh, PbName)
 
    CLOSE(61)
 
- END SUBROUTINE CellVertexVtk_n
+ END SUBROUTINE CellVertexVtk
 
 
 end module to_vtk

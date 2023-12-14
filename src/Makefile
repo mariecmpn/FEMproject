@@ -1,7 +1,7 @@
 # Makefile Projet fluides incompressibles
 
 # Compiler used
-CC = gfortran
+CC = gfortran-11
 
 # Options de compilation
 FFLAGS = -O0
@@ -17,7 +17,7 @@ OBJS = $(ODIR)/main.o $(ODIR)/stockage_creux.o $(ODIR)/remplissage_A_L.o $(ODIR)
 MODS = stockage_matrice.mod quadrature_P1.mod quadrature_P2.mod to_vtk.mod numerics.mod remplissage_a_l.mod computation.mod
 
 # Librairies used
-LIBS = -llapack -lblas
+LIBS = #-llapack -lblas
 
 # nom de l'executable
 PROG = elements_finis
@@ -32,18 +32,18 @@ clean:
 
 # Regles construction des fichiers binaires
 $(ODIR)/main.o: main.f90 stockage_creux.f90 quadrature_P2.f90 quadrature.f90 recup_node.f90 computation.f90 numerics.f90
-	$(FC) -c $(FFLAGS) main.f90 -o $(ODIR)/main.o
+	$(CC) -c $(FFLAGS) main.f90 -o $(ODIR)/main.o
 $(ODIR)/numerics.o: numerics.f90 
-	$(FC) -c $(FFLAGS) numerics.f90 -o $(ODIR)/numerics.o
+	$(CC) -c $(FFLAGS) numerics.f90 -o $(ODIR)/numerics.o
 $(ODIR)/stockage_creux.o: stockage_creux.f90 remplissage_A_L.f90 quadrature_P2.f90 quadrature.f90 numerics.f90
-	$(FC) -c $(FFLAGS) stockage_creux.f90 -o $(ODIR)/stockage_creux.o
+	$(CC) -c $(FFLAGS) stockage_creux.f90 -o $(ODIR)/stockage_creux.o
 $(ODIR)/quadrature.o: quadrature.f90 numerics.f90
-	$(FC) -c $(FFLAGS) quadrature.f90 -o $(ODIR)/quadrature.o
+	$(CC) -c $(FFLAGS) quadrature.f90 -o $(ODIR)/quadrature.o
 $(ODIR)/recup_node.o: recup_node.f90 numerics.f90
-	$(FC) -c $(FFLAGS) recup_node.f90 -o $(ODIR)/recup_node.o
+	$(CC) -c $(FFLAGS) recup_node.f90 -o $(ODIR)/recup_node.o
 $(ODIR)/quadrature_P2.o: quadrature_P2.f90 quadrature.f90 numerics.f90 
-	$(FC) -c $(FFLAGS) quadrature_P2.f90 -o $(ODIR)/quadrature_P2.o
+	$(CC) -c $(FFLAGS) quadrature_P2.f90 -o $(ODIR)/quadrature_P2.o
 $(ODIR)/remplissage_A_L.o: remplissage_A_L.f90 quadrature_P2.f90 quadrature.f90 numerics.f90
-	$(FC) -c $(FFLAGS) remplissage_A_L.f90 -o $(ODIR)/remplissage_A_L.o
+	$(CC) -c $(FFLAGS) remplissage_A_L.f90 -o $(ODIR)/remplissage_A_L.o
 $(ODIR)/computation.o: computation.f90 numerics.f90
-	$(FC) -c $(FFLAGS) computation.f90 -o $(ODIR)/computation.o
+	$(CC) -c $(FFLAGS) computation.f90 -o $(ODIR)/computation.o

@@ -272,7 +272,7 @@ module stockage_matrice
     end function AmatLoc
 
 
-    subroutine stockage_morse(Tmat, Jposi, JvCell, coordonnees, connect, nb_element, nb_triangle, NcoefMat)
+    subroutine stockage_morse(Tmat, Jposi, JvCell, coordonnees, connect, nb_element, nb_triangle, NcoefMat, positions)
         ! Subroutine pour le remplissage de Tmat
         integer, intent(in) :: nb_element, nb_triangle, NcoefMat
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
@@ -280,6 +280,7 @@ module stockage_matrice
         integer, dimension(1:nb_element+1), intent(inout) :: Jposi
         real(rp), dimension(nb_element, 2), intent(in) :: coordonnees
         integer, dimension(3,nb_triangle), intent(in) :: connect
+        integer, dimension(nb_element), intent(in) :: positions
         real(rp), dimension(3,3) :: Aloc
         real(rp), dimension(2,3) :: coor_triangle
         integer :: i,j,m
@@ -292,16 +293,17 @@ module stockage_matrice
                 end do
             end do
             Aloc = AmatLoc(coor_triangle)
-            call Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat)
+            call Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat, positions)
         end do
 
     end subroutine stockage_morse
 
 
-    subroutine Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat)
+    subroutine Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat, positions)
         ! Subroutine qui ajoute la contribution Aloc a Tmat aux bons endroits
         integer, intent(in) :: m, nb_element, nb_triangle, NcoefMat
         integer, dimension(3,nb_triangle), intent(in) :: connect
+        integer, dimension(nb_element), intent(in) :: positions
         real(rp), dimension(3,3), intent(in) :: Aloc
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
         integer, dimension(1:NcoefMat), intent(in) :: JvCell
@@ -312,39 +314,40 @@ module stockage_matrice
         j = connect(2,m)
         k = connect(3,m)
         ! On ajoute les contributions ligne par ligne ! Pour la ligne i, on a
-        if (i<=nb_element) then ! on ne touche pas le bord
+        !if (i<=nb_element) then ! on ne touche pas le bord
+        if (positions(i) /= 1) then
             ! on ajoute dans A la contribution du triangle au terme a(phi_i,phi_i) :
             call Ajout(i,i,Aloc(1,1),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (j<=nb_element) then ! on ne touche pas le bord
+        if (positions(j) /= 1) then ! on ne touche pas le bord
             ! on ajoute dans A la contribution du triangle au terme a(phi_i,phi_j) :
             call Ajout(i,j,Aloc(1,2),Tmat,Jposi,JvCell,nb_element, NcoefMat) 
         end if
-        if (k<=nb_element) then ! on ne touche pas le bord
+        if (positions(k) /= 1) then ! on ne touche pas le bord
             ! on ajoute dans A la contribution du triangle au terme a(phi_i,phi_k) : 
             call Ajout(i,k,Aloc(1,3),Tmat,Jposi,JvCell, nb_element, NcoefMat)
         end if
         ! Remarque : si on doit ajouter des termes de bord, on le fait ici avec un else end if
 
         ! Pour la ligne j, on recommence une procedure similaire
-        if (i<=nb_element) then ! on ne touche pas le bord
+        if (positions(i) /= 1) then ! on ne touche pas le bord
             call Ajout(j,i,Aloc(2,1),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (j<=nb_element) then ! on ne touche pas le bord
+        if (positions(j) /= 1) then ! on ne touche pas le bord
             call Ajout(j,j,Aloc(2,2),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (k<=nb_element) then ! on ne touche pas le bord
+        if (positions(k) /= 1) then ! on ne touche pas le bord
             call Ajout(j,k,Aloc(2,3),Tmat,Jposi,JvCell, nb_element, NcoefMat)
         end if
 
         ! Pour la ligne k, on recommence une procedure similaire
-        if (i<=nb_element) then ! on ne touche pas le bord
+        if (positions(i) /= 1) then ! on ne touche pas le bord
             call Ajout(k,i,Aloc(3,1),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (j<=nb_element) then ! on ne touche pas le bord
+        if (positions(j) /= 1) then ! on ne touche pas le bord
             call Ajout(k,j,Aloc(3,2),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (k<=nb_element) then ! on ne touche pas le bord
+        if (positions(k) /= 1) then ! on ne touche pas le bord
             call Ajout(k,k,Aloc(3,3),Tmat,Jposi,JvCell, nb_element, NcoefMat)
         end if
     end subroutine Assemble
@@ -377,7 +380,7 @@ module stockage_matrice
 
     !--------------------------------------------!
     !     Reconstruction de A grace a son
-    !               stockage Morse
+    !              stockage Morse
     !--------------------------------------------!
 
     subroutine reconstruction_A_morse(A, Tmat, Jposi, JvCell, points_int, nb_element, NcoefMat, dim_mat)

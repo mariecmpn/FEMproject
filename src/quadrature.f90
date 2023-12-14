@@ -27,13 +27,15 @@ module quadrature_P1
         ! Subroutine qui permet de transformer les coordonnees d'un triangle simplicial en coordonnees d'un certain triangle
         real(rp), intent(inout), dimension(2,3) :: coor_simplexe ! coordonnees du simplexe qui sont transformees en coordonnees du triangle
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
+        real(rp), dimension(2,3) :: coor
 
+        coor(:,:) = coor_simplexe(:,:)
         ! Premiere coordonnee
-        coor_simplexe(1,:) = coor_triangle(1,1) + (coor_triangle(1,2) - coor_triangle(1,1))*coor_simplexe(1,:)
-        coor_simplexe(1,:) = coor_simplexe(1,:) + (coor_triangle(1,3) - coor_triangle(1,1))*coor_simplexe(2,:)
+        coor_simplexe(1,:) = coor_triangle(1,1) + (coor_triangle(1,2) - coor_triangle(1,1))*coor(1,:)
+        coor_simplexe(1,:) = coor_simplexe(1,:) + (coor_triangle(1,3) - coor_triangle(1,1))*coor(2,:)
         ! Deuxieme coordonnee
-        coor_simplexe(2,:) = coor_triangle(2,1) + (coor_triangle(2,2) - coor_triangle(2,1))*coor_simplexe(1,:) 
-        coor_simplexe(2,:) = coor_simplexe(2,:) + (coor_triangle(2,3) - coor_triangle(2,1))*coor_simplexe(2,:)
+        coor_simplexe(2,:) = coor_triangle(2,1) + (coor_triangle(2,2) - coor_triangle(2,1))*coor(1,:) 
+        coor_simplexe(2,:) = coor_simplexe(2,:) + (coor_triangle(2,3) - coor_triangle(2,1))*coor(2,:)
     end subroutine transformee_triangle
 
     subroutine init_triangle_ref(coor)
@@ -64,11 +66,11 @@ module quadrature_P1
         inv_J(2,1) = coor_triangle(2,1)-coor_triangle(2,2)
         inv_J(2,2) = coor_triangle(1,2)-coor_triangle(1,1)
         ! pus on renvoit seulement la valeur qui nous interesse 
-        inv_jac = inv_J(k1,k2)*det_Jac(coor_triangle)
+        inv_jac = inv_J(k1,k2)/det_Jac(coor_triangle)
     end function inv_jac
 
     !--------------------------------------------!
-    !       Fonctions de base simplexe de ref
+    !           Fonctions de reference
     !             et leurs derivees
     !--------------------------------------------!
 
@@ -144,12 +146,14 @@ module quadrature_P1
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
         integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor
-        real(rp) :: poids
-        integer :: i
+        real(rp) :: poids, quad1, quad2
+        integer :: i, k1
         real(rp) :: A1,A2,A3,A4
         real(rp) :: j11, j12, j21, j22
 
         quad = 0._rp
+        quad1 = 0._rp
+        quad2 = 0._rp
         poids = (1._rp/6._rp)
         ! on recupere les termes de l'inverse de la matrice jacobienne
         j11 = inv_jac(coor_triangle,1,1)
@@ -167,6 +171,13 @@ module quadrature_P1
             A4 = (j12*dphi_dy(coor(:,i),num_j)+j22*dphi_dy(coor(:,i),num_j))
             quad = quad + A1*A2 + A3*A4
         end do
+        !do k1 = 1,2
+        !    quad1 = quad1 + inv_jac(coor_triangle,1,k1)*dphi_dx(coor,num_i)
+        !    quad2 = quad2 + inv_jac(coor_triangle,1,k1)*dphi_dy(coor,num_j)
+        !    quad1 = quad1 + inv_jac(coor_triangle,2,k1)*dphi_dx(coor,num_i)
+        !    quad2 = quad2 + inv_jac(coor_triangle,2,k1)*dphi_dy(coor,num_j)
+        !    quad = quad + quad1*quad2
+        !end do
         
         ! on multiplie le tout par le poids
         quad = quad*poids*abs(det_Jac(coor_triangle))

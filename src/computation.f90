@@ -50,7 +50,7 @@ module computation
         nb_iter = 0
 
         ! iterations
-        do while (nb_iter<=1000) ! tant qu'on a pas depasse le nombre d'iterations max
+        do while (nb_iter<=100) ! tant qu'on n'a pas depasse le nombre d'iterations max
             Apk = matmul(A, p_k) ! A*p_k
             alpha = dot_trans(r_k, r_k, dim_mat) / dot_trans(p_k, Apk, dim_mat) ! r_k^T*r_k / p_k^T*A*p_k
             x_k(:) = x_k(:) + alpha*p_k(:) 
