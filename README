@@ -8,9 +8,12 @@ CONTENU DU DOSSIER:
 - src/Makefile: Makefile pour la compilation du programme
 - src/numerics.f90: module en Fortran qui definit les constantes utiles pour les modules (entre autres rp la double precision)
 - src/recup_node.f90: module en Fortran qui permet de recuperer les informations utiles du maillage et d'enregistrer sous vtk la solution du probleme
-- src/quadrature.f90: module en Fortran pour la resolution en element fini P1-Lagrange - fonctions de base, quadrature, remplissage de L et A
+- src/quadrature.f90: module en Fortran pour la resolution en element fini P1-Lagrange - fonctions de base, quadratures
 - src/quadrature_P2.f90: module en Fortran pour la resolution en element fini P2-Lagrange
 - src/stockage_creux.f90: module en Fortran pour le stockage creux de la matrice de masse A
+- src/computation.f90: module en Fortran pour la resolution du systeme lineaire AU=L par la methode du gradient conjugue et des fonctions utiles pour cet algorithme (norme infinie...)``
+
+
 
 COMPILATION:
 Il faut aller dans le dossier src et faire "make". Le fichier executable sera stocke dans le dossier parent de src, et les fichiers binaires seront dans le dossier "bin".

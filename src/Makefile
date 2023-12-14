@@ -17,7 +17,7 @@ OBJS = $(ODIR)/main.o $(ODIR)/stockage_creux.o $(ODIR)/remplissage_A_L.o $(ODIR)
 MODS = stockage_matrice.mod quadrature_P1.mod quadrature_P2.mod to_vtk.mod numerics.mod remplissage_a_l.mod computation.mod
 
 # Librairies used
-LIBS = #-llapack -lblas
+LIBS = -llapack -lblas
 
 # nom de l'executable
 PROG = elements_finis

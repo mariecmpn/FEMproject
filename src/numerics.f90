@@ -1,5 +1,5 @@
 module numerics
-    ! Module pour la definition de la double precision
+    ! Module pour la definition des constantes
 
     use iso_fortran_env
     IMPLICIT NONE

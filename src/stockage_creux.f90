@@ -1,8 +1,6 @@
 module stockage_matrice
     use numerics
     use quadrature_P1
-    use quadrature_P2
-    use remplissage_A_L
     IMPLICIT NONE
 
     ! Declaration d’un type maillon
@@ -203,11 +201,6 @@ module stockage_matrice
         integer, dimension(1:nb_element+1), intent(inout) :: Jposi
         integer, dimension(:), allocatable :: IndPL
         integer :: iseg, js, is, jv, kv, tmp
-
-        ! Allocation des tableaux 
-        !allocate(Tmat(1:NcoefMat)) 
-        !allocate(Jposi(1:nb_element+1)) 
-        !allocate(JvCell(1:NcoefMat))
 
         do is=1,nb_element+1
             Jposi(is)=is

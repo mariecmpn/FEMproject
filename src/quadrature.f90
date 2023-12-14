@@ -146,14 +146,15 @@ module quadrature_P1
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
         integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor
-        real(rp) :: poids, quad1, quad2
+        real(rp) :: poids
+        !real(rp) :: quad1, quad2
         integer :: i, k1
         real(rp) :: A1,A2,A3,A4
         real(rp) :: j11, j12, j21, j22
 
         quad = 0._rp
-        quad1 = 0._rp
-        quad2 = 0._rp
+        !quad1 = 0._rp
+        !quad2 = 0._rp
         poids = (1._rp/6._rp)
         ! on recupere les termes de l'inverse de la matrice jacobienne
         j11 = inv_jac(coor_triangle,1,1)
