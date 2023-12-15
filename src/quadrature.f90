@@ -2,6 +2,17 @@ module quadrature_P1
     use numerics
     IMPLICIT NONE
 
+    !--------------------------------------------!
+    !               DANS CE MODULE:
+    ! - Fonctions exactes
+    ! - Definition des fonctions de base P1 et 
+    ! de leurs derivees
+    ! - Definition de la transformee affine, 
+    ! le det et l'inverse de sa jacobienne
+    ! - Formules de quadrature a 3 points pour
+    ! A et L
+    !--------------------------------------------!
+
     contains
 
     !--------------------------------------------!
@@ -68,6 +79,17 @@ module quadrature_P1
         ! pus on renvoit seulement la valeur qui nous interesse 
         inv_jac = inv_J(k1,k2)/det_Jac(coor_triangle)
     end function inv_jac
+
+    real(rp) function mesure_tri(coor_triangle)
+        real(rp), dimension(2,3) :: coor_triangle
+        real(rp) :: demiperi, a, b, c
+
+        a = sqrt((coor_triangle(1,1)- coor_triangle(1,2))**2 + (coor_triangle(2,1)- coor_triangle(2,2))**2)
+        b = sqrt((coor_triangle(1,2)- coor_triangle(1,3))**2 + (coor_triangle(2,2)- coor_triangle(2,3))**2)
+        c = sqrt((coor_triangle(1,1)- coor_triangle(1,3))**2 + (coor_triangle(2,1)- coor_triangle(2,3))**2)
+        demiperi = (a+b+c)*0.5_rp
+        mesure_tri = sqrt(demiperi*(demiperi-a)*(demiperi-b)*(demiperi-c))
+    end function mesure_tri
 
     !--------------------------------------------!
     !           Fonctions de reference
@@ -137,7 +159,8 @@ module quadrature_P1
         !quad = f(coor(:,1)) * phi(coor_ref(:,1),num) + f(coor(:,2)) * phi(coor_ref(:,2),num) + f(coor(:,3)) * phi(coor_ref(:,3),num) ! quadrature sans le det de la jacob. et le poids de quadrature
         quad = f(coor_triangle(:,num))
 
-        quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp) ! on multiplie le tout pour avoir notre integrale approchee
+        quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp)
+        !quad = quad * mesure_tri(coor_triangle) ! on multiplie le tout pour avoir notre integrale approchee
     end subroutine quadrature_triangle_L
 
 
@@ -147,14 +170,14 @@ module quadrature_P1
         integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
         real(rp), dimension(2,3) :: coor
         real(rp) :: poids
-        !real(rp) :: quad1, quad2
+        real(rp) :: quad1, quad2
         integer :: i, k1
         real(rp) :: A1,A2,A3,A4
         real(rp) :: j11, j12, j21, j22
 
         quad = 0._rp
-        !quad1 = 0._rp
-        !quad2 = 0._rp
+        quad1 = 0._rp
+        quad2 = 0._rp
         poids = (1._rp/6._rp)
         ! on recupere les termes de l'inverse de la matrice jacobienne
         j11 = inv_jac(coor_triangle,1,1)
@@ -185,23 +208,6 @@ module quadrature_P1
     end subroutine quadrature_triangle_A
 
 
-    !--------------------------------------------!
-    !           Post-traitement
-    !--------------------------------------------!
-
-    subroutine recup_vect_U(U, L, points_int, nb_element, dim_mat)
-        ! subroutine pour recuperer le vecteur U des solutions avec les points interieurs et sur la frontiere
-        integer, intent(in) :: nb_element, dim_mat 
-        real(rp), dimension(nb_element), intent(inout) :: U
-        real(rp), dimension(dim_mat), intent(in) :: L
-        integer, dimension(dim_mat), intent(in) :: points_int
-        integer :: i
-
-        U(:) = 0._rp
-        do i =1,dim_mat
-            U(points_int(i)) = L(i)
-        end do
-    end subroutine recup_vect_U
 
 
 end module quadrature_P1

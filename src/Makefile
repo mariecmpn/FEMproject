@@ -46,4 +46,4 @@ $(ODIR)/quadrature_P2.o: quadrature_P2.f90 quadrature.f90 numerics.f90
 $(ODIR)/remplissage_A_L.o: remplissage_A_L.f90 quadrature_P2.f90 quadrature.f90 numerics.f90
 	$(CC) -c $(FFLAGS) remplissage_A_L.f90 -o $(ODIR)/remplissage_A_L.o
 $(ODIR)/computation.o: computation.f90 numerics.f90
-	$(CC) -c $(FFLAGS) computation.f90 -o $(ODIR)/computation.o
+	$(CC) -c $(FFLAGS) computation.f90 -lblas -o $(ODIR)/computation.o

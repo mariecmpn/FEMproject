@@ -3,6 +3,14 @@ module stockage_matrice
     use quadrature_P1
     IMPLICIT NONE
 
+    !--------------------------------------------!
+    !               DANS CE MODULE:
+    ! - Remplissages de NUBO (cher et moins cher)
+    ! - Subroutines pour le stockage creux de A
+    ! - Reconstruction de A a partir de son 
+    ! stockage creux
+    !--------------------------------------------!
+
     ! Declaration d’un type maillon
     Type maillon
         integer :: valeur ! Numero du sommet
@@ -265,8 +273,9 @@ module stockage_matrice
     end function AmatLoc
 
 
-    subroutine stockage_morse(Tmat, Jposi, JvCell, coordonnees, connect, nb_element, nb_triangle, NcoefMat, positions)
+    subroutine stockage_morse(A, Tmat, Jposi, JvCell, coordonnees, connect, nb_element, nb_triangle, NcoefMat, positions)
         ! Subroutine pour le remplissage de Tmat
+        type(mat_creuse), intent(out) :: A
         integer, intent(in) :: nb_element, nb_triangle, NcoefMat
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
         integer, dimension(1:NcoefMat), intent(inout) :: JvCell
@@ -285,10 +294,18 @@ module stockage_matrice
                     coor_triangle(j,i) = coordonnees(connect(i,m),j)
                 end do
             end do
-            Aloc = AmatLoc(coor_triangle)
-            call Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat, positions)
+            !if ((positions(connect(1,m)) == 0) .AND. (positions(connect(2,m)) == 0) .AND. (positions(connect(2,m)) == 0)) then
+                Aloc = AmatLoc(coor_triangle)
+                call Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat, positions)
+            !end if
         end do
 
+        A%NcoefMat = NCoefMat
+        A%nb_element = nb_element
+        allocate(A%Tmat(1:A%NcoefMat), A%JvCell(1:A%NcoefMat), A%Jposi(1:A%nb_element+1))
+        A%Tmat(:) = Tmat(:)
+        A%JvCell(:) = JvCell(:)
+        A%Jposi(:) = Jposi(:)
     end subroutine stockage_morse
 
 
@@ -308,39 +325,39 @@ module stockage_matrice
         k = connect(3,m)
         ! On ajoute les contributions ligne par ligne ! Pour la ligne i, on a
         !if (i<=nb_element) then ! on ne touche pas le bord
-        if (positions(i) /= 1) then
+        if (positions(i) == 0) then
             ! on ajoute dans A la contribution du triangle au terme a(phi_i,phi_i) :
             call Ajout(i,i,Aloc(1,1),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (positions(j) /= 1) then ! on ne touche pas le bord
+        if (positions(j) == 0) then ! on ne touche pas le bord
             ! on ajoute dans A la contribution du triangle au terme a(phi_i,phi_j) :
             call Ajout(i,j,Aloc(1,2),Tmat,Jposi,JvCell,nb_element, NcoefMat) 
         end if
-        if (positions(k) /= 1) then ! on ne touche pas le bord
+        if (positions(k) == 0) then ! on ne touche pas le bord
             ! on ajoute dans A la contribution du triangle au terme a(phi_i,phi_k) : 
             call Ajout(i,k,Aloc(1,3),Tmat,Jposi,JvCell, nb_element, NcoefMat)
         end if
         ! Remarque : si on doit ajouter des termes de bord, on le fait ici avec un else end if
 
         ! Pour la ligne j, on recommence une procedure similaire
-        if (positions(i) /= 1) then ! on ne touche pas le bord
+        if (positions(i)== 0) then ! on ne touche pas le bord
             call Ajout(j,i,Aloc(2,1),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (positions(j) /= 1) then ! on ne touche pas le bord
+        if (positions(j)== 0) then ! on ne touche pas le bord
             call Ajout(j,j,Aloc(2,2),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (positions(k) /= 1) then ! on ne touche pas le bord
+        if (positions(k)== 0) then ! on ne touche pas le bord
             call Ajout(j,k,Aloc(2,3),Tmat,Jposi,JvCell, nb_element, NcoefMat)
         end if
 
         ! Pour la ligne k, on recommence une procedure similaire
-        if (positions(i) /= 1) then ! on ne touche pas le bord
+        if (positions(i) == 0) then ! on ne touche pas le bord
             call Ajout(k,i,Aloc(3,1),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (positions(j) /= 1) then ! on ne touche pas le bord
+        if (positions(j) == 0) then ! on ne touche pas le bord
             call Ajout(k,j,Aloc(3,2),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
         end if
-        if (positions(k) /= 1) then ! on ne touche pas le bord
+        if (positions(k) == 0) then ! on ne touche pas le bord
             call Ajout(k,k,Aloc(3,3),Tmat,Jposi,JvCell, nb_element, NcoefMat)
         end if
     end subroutine Assemble
@@ -376,11 +393,12 @@ module stockage_matrice
     !              stockage Morse
     !--------------------------------------------!
 
-    subroutine reconstruction_A_morse(A, Tmat, Jposi, JvCell, points_int, nb_element, NcoefMat, dim_mat)
+    subroutine reconstruction_A_morse(A, A_creuse, points_int, nb_element, NcoefMat, dim_mat)
         integer, intent(in) :: nb_element, NcoefMat, dim_mat
-        real(rp), dimension(1:NcoefMat), intent(in) :: Tmat
-        integer, dimension(1:NcoefMat), intent(in) :: JvCell
-        integer, dimension(1:nb_element+1), intent(in) :: Jposi
+        !real(rp), dimension(1:NcoefMat), intent(in) :: Tmat
+        !integer, dimension(1:NcoefMat), intent(in) :: JvCell
+        !integer, dimension(1:nb_element+1), intent(in) :: Jposi
+        type(mat_creuse), intent(in) :: A_creuse
         real(rp), dimension(dim_mat,dim_mat), intent(inout) :: A
         real(rp), dimension(nb_element,nb_element) :: A_avec_frontiere
         integer, dimension(1:dim_mat), intent(in) :: points_int
@@ -390,10 +408,10 @@ module stockage_matrice
         jj = 1 
         do i = 1,nb_element
             ! On regarde le nombre de termes non nuls pour la ligne i
-            nb_non0 = Jposi(i+1) - Jposi(i)
+            nb_non0 = A_creuse%Jposi(i+1) - A_creuse%Jposi(i)
             !print*, nb_non0
             do j = 1,nb_non0 
-                A_avec_frontiere(i,JvCell(jj)) = Tmat(jj) ! puis on remplit au bon endroit pour chaque terme non nul
+                A_avec_frontiere(i,A_creuse%JvCell(jj)) = A_creuse%Tmat(jj) ! puis on remplit au bon endroit pour chaque terme non nul
                 jj = jj+1
             end do
         end do

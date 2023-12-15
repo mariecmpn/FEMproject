@@ -2,7 +2,13 @@ module to_vtk
    use iso_fortran_env
    use numerics
    IMPLICIT NONE
-   !integer, parameter :: rp = real64
+
+   !--------------------------------------------!
+   !               DANS CE MODULE:
+   ! - Subroutines pour le pre-traitement et
+   ! le post-traitement
+   !--------------------------------------------!
+
 
    type Donnees
       !real(rp) :: Impre
@@ -220,6 +226,24 @@ SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
    CLOSE(61)
 
  END SUBROUTINE CellVertexVtk
+
+   !--------------------------------------------!
+   !           Post-traitement
+   !--------------------------------------------!
+
+   subroutine recup_vect_U(U, L, points_int, nb_element, dim_mat)
+      ! subroutine pour recuperer le vecteur U des solutions avec les points interieurs et sur la frontiere
+      integer, intent(in) :: nb_element, dim_mat 
+      real(rp), dimension(nb_element), intent(inout) :: U
+      real(rp), dimension(dim_mat), intent(in) :: L
+      integer, dimension(dim_mat), intent(in) :: points_int
+      integer :: i
+
+      U(:) = 0._rp
+      do i =1,dim_mat
+         U(points_int(i)) = L(i)
+      end do
+   end subroutine recup_vect_U
 
 
 end module to_vtk

@@ -3,6 +3,17 @@ module quadrature_P2
     use quadrature_P1
     IMPLICIT NONE
 
+    !--------------------------------------------!
+    !               DANS CE MODULE:
+    ! - Definition des fonctions de base P2 et 
+    ! de leurs derivees
+    ! - Formules de quadrature (a 6 points) pour A
+    ! et L
+    ! - Recherche des points milieux, leur 
+    ! position
+    ! - Definition de tri_s_m
+    !--------------------------------------------!
+
     contains
 
     !--------------------------------------------!
@@ -97,11 +108,17 @@ module quadrature_P2
         call transformee_triangle(coor, coor_triangle) 
         call transformee_triangle(coor_milieu, coor_triangle)
 
-        quad = f(coor(:,1)) * phi(coor_ref(:,1),num) + f(coor(:,2)) * phi(coor_ref(:,2),num) + f(coor(:,3)) * phi(coor_ref(:,3),num) ! sommets
+        if ((num == 1) .OR. (num == 2) .OR. (num == 3)) then
+            quad = f(coor_triangle(:,num))
+        else if ((num == 4) .OR. (num == 5) .OR. (num == 6)) then
+            quad = f(coor_milieu(:,num-3))
+        end if
+
+        !quad = f(coor(:,1)) * phi(coor_ref(:,1),num) + f(coor(:,2)) * phi(coor_ref(:,2),num) + f(coor(:,3)) * phi(coor_ref(:,3),num) ! sommets
         ! puis aux points milieux
-        quad = quad + f(coor_milieu(:,1)) * phi(coor_milieu_ref(:,1),num) 
-        quad = quad + f(coor_milieu(:,2)) * phi(coor_milieu_ref(:,2),num) 
-        quad = quad + f(coor_milieu(:,3)) * phi(coor_milieu_ref(:,3),num) 
+        !quad = quad + f(coor_milieu(:,1)) * phi(coor_milieu_ref(:,1),num) 
+        !quad = quad + f(coor_milieu(:,2)) * phi(coor_milieu_ref(:,2),num) 
+        !quad = quad + f(coor_milieu(:,3)) * phi(coor_milieu_ref(:,3),num) 
         quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/12._rp) ! on multiplie le tout pour avoir notre integrale approchee
     end subroutine quadrature_triangle_L_P2
 
@@ -131,22 +148,135 @@ module quadrature_P2
 
         quad = 0._rp
         do i = 1,3 ! pour les sommets
-            A1 = (j11*dphi_dx_P2(coor(:,i),num_i)+j12*dphi_dx_P2(coor(:,i),num_i))
-            A2 = (j11*dphi_dx_P2(coor(:,i),num_j)+j12*dphi_dx_P2(coor(:,i),num_j))
-            A3 = (j21*dphi_dy_P2(coor(:,i),num_i)+j22*dphi_dy_P2(coor(:,i),num_i))
-            A4 = (j21*dphi_dy_P2(coor(:,i),num_j)+j22*dphi_dy_P2(coor(:,i),num_j))
+            A1 = (j11*dphi_dx_P2(coor(:,i),num_i)+j21*dphi_dx_P2(coor(:,i),num_i))
+            A2 = (j11*dphi_dx_P2(coor(:,i),num_j)+j21*dphi_dx_P2(coor(:,i),num_j))
+            A3 = (j12*dphi_dy_P2(coor(:,i),num_i)+j22*dphi_dy_P2(coor(:,i),num_i))
+            A4 = (j12*dphi_dy_P2(coor(:,i),num_j)+j22*dphi_dy_P2(coor(:,i),num_j))
             quad = quad + A1*A2 + A3*A4
         end do ! puis pour les points milieux
         do i = 1,3
-            A1 = (j11*dphi_dx_P2(coor_milieu(:,i),num_i)+j12*dphi_dx_P2(coor_milieu(:,i),num_i))
-            A2 = (j11*dphi_dx_P2(coor_milieu(:,i),num_j)+j12*dphi_dx_P2(coor_milieu(:,i),num_j))
-            A3 = (j21*dphi_dy_P2(coor_milieu(:,i),num_i)+j22*dphi_dy_P2(coor_milieu(:,i),num_i))
-            A4 = (j21*dphi_dy_P2(coor_milieu(:,i),num_j)+j22*dphi_dy_P2(coor_milieu(:,i),num_j))
+            A1 = (j11*dphi_dx_P2(coor_milieu(:,i),num_i)+j21*dphi_dx_P2(coor_milieu(:,i),num_i))
+            A2 = (j11*dphi_dx_P2(coor_milieu(:,i),num_j)+j21*dphi_dx_P2(coor_milieu(:,i),num_j))
+            A3 = (j12*dphi_dy_P2(coor_milieu(:,i),num_i)+j22*dphi_dy_P2(coor_milieu(:,i),num_i))
+            A4 = (j12*dphi_dy_P2(coor_milieu(:,i),num_j)+j22*dphi_dy_P2(coor_milieu(:,i),num_j))
             quad = quad + A1*A2 + A3*A4
         end do
         
         ! on multiplie le tout par le poids
         quad = quad*poids
     end subroutine quadrature_triangle_A_P2
+
+
+    !--------------------------------------------!
+    !       Recherche de points milieux
+    !--------------------------------------------!
+
+    subroutine recherche_milieux(coor_milieux, NUBO, Nseg, coordonnees, nb_element)
+        integer, intent(in) :: Nseg,nb_element
+        integer, dimension(2, Nseg), intent(in) :: NUBO
+        real(rp), dimension(Nseg,2), intent(inout) :: coor_milieux
+        real(rp), dimension(nb_element,2), intent(in) :: coordonnees
+        integer :: i, S1, S2
+
+        coor_milieux(:,:) = 0._rp
+        do i = 1,Nseg
+            S1 = NUBO(1,i)
+            S2 = NUBO(2,i)
+            coor_milieux(i,1) = (coordonnees(S1,1) + coordonnees(S2,1))*0.5_rp
+            coor_milieux(i,2) = (coordonnees(S1,2) + coordonnees(S2,2))*0.5_rp
+        end do 
+    end subroutine recherche_milieux
+
+    subroutine pts_et_mid_int(tous_pts_int, dim_matP2, posi_sommet_mid, nb_element, Nseg)
+        integer, intent(in) :: nb_element, Nseg
+        integer, intent(inout) :: dim_matP2
+        integer, dimension(:), allocatable, intent(inout) :: tous_pts_int
+        integer, dimension(nb_element+Nseg), intent(in) :: posi_sommet_mid
+        integer, dimension(nb_element+Nseg) :: points
+        integer :: i
+
+        dim_matP2 = 0
+        do i = 1,nb_element+Nseg
+            if (posi_sommet_mid(i) == 0) then
+                dim_matP2 = dim_matP2+1
+                points(dim_matP2) = i
+            end if
+        end do
+        allocate(tous_pts_int(dim_matP2))
+        tous_pts_int(:) = points(1:dim_matP2)
+    end subroutine pts_et_mid_int
+
+    subroutine ttes_positions(posi_sommet_mid, positions, nb_element, Nseg, NUBO)
+        integer, dimension(nb_element+Nseg), intent(inout) :: posi_sommet_mid
+        integer, dimension(nb_element), intent(in) :: positions
+        integer, dimension(2,Nseg) :: NUBO
+        integer, intent(in) :: Nseg, nb_element
+        integer :: i
+
+        posi_sommet_mid(:) = 0
+        posi_sommet_mid(1:nb_element) = positions(:)
+
+        do i = 1,Nseg
+            if ((positions(NUBO(1,i)) == 1) .AND. (positions(NUBO(2,i)) == 1)) then
+                posi_sommet_mid(nb_element+i) = 1 ! si les deux sommets du segmetn sont sur le bord, alors le milieu est aussi sur le bord
+            end if 
+        end do
+    end subroutine ttes_positions
+
+
+    subroutine connect_milieux(tri_s_m, connect, nb_triangle, NUBO, Nseg, nb_element)
+        integer, intent(in) :: nb_triangle, Nseg, nb_element
+        integer, dimension(6,nb_triangle), intent(inout) :: tri_s_m
+        integer, dimension(3,nb_triangle), intent(in) :: connect
+        integer, dimension(2,NSeg), intent(in) :: NUBO
+        integer :: m, S1, S2, k
+
+        do m = 1,nb_triangle
+            ! on cherche les indices globaux des sommets et des milieux
+            tri_s_m(1:3,m) = connect(:,m)
+            ! premier segment
+            if (tri_s_m(1,m) < tri_s_m(2,m)) then
+                S1 = tri_s_m(1,m)
+                S2 = tri_s_m(2,m)
+            else 
+                S1 = tri_s_m(2,m)
+                S2 = tri_s_m(1,m)
+            end if 
+            do k = 1,Nseg ! on cherche le segment dans NUBO
+                if ((S1 == NUBO(1,k)) .AND. (S2 == NUBO(2,k))) then ! des qu'on le trouve, on note l'indice global du milieu et on sort
+                    tri_s_m(6,m) = k+nb_element
+                    exit
+                end if
+            end do
+            ! deuxieme segment
+            if (tri_s_m(2,m) < tri_s_m(2,m)) then
+                S1 = tri_s_m(2,m)
+                S2 = tri_s_m(3,m)
+            else 
+                S1 = tri_s_m(3,m)
+                S2 = tri_s_m(2,m)
+            end if 
+            do k = 1,Nseg ! on cherche le segment dans NUBO
+                if ((S1 == NUBO(1,k)) .AND. (S2 == NUBO(2,k))) then ! des qu'on le trouve, on note l'indice global du milieu et on sort
+                    tri_s_m(5,m) = k+nb_element
+                    exit
+                end if
+            end do
+            ! troisieme segment
+            if (tri_s_m(3,m) < tri_s_m(1,m)) then
+                S1 = tri_s_m(3,m)
+                S2 = tri_s_m(1,m)
+            else 
+                S1 = tri_s_m(1,m)
+                S2 = tri_s_m(3,m)
+            end if 
+            do k = 1,Nseg ! on cherche le segment dans NUBO
+                if ((S1 == NUBO(1,k)) .AND. (S2 == NUBO(2,k))) then ! des qu'on le trouve, on note l'indice global du milieu et on sort
+                    tri_s_m(4,m) = k+nb_element
+                    exit
+                end if
+            end do
+        end do
+    end subroutine connect_milieux
 
 end module quadrature_P2
