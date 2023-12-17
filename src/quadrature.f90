@@ -169,8 +169,8 @@ module quadrature_P1
         !quad = f(coor(:,1)) * phi(coor_ref(:,1),num) + f(coor(:,2)) * phi(coor_ref(:,2),num) + f(coor(:,3)) * phi(coor_ref(:,3),num) ! quadrature sans le det de la jacob. et le poids de quadrature
         quad = f(coor_triangle(:,num))
 
-        !quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp)
-        quad = quad * mesure_tri(coor_triangle)*(1._rp/3._rp) ! on multiplie le tout pour avoir notre integrale approchee
+        quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp)
+        !quad = quad * mesure_tri(coor_triangle)*(1._rp/3._rp) ! on multiplie le tout pour avoir notre integrale approchee
     end subroutine quadrature_triangle_L
 
 
@@ -206,11 +206,11 @@ module quadrature_P1
             A3 = (j12*dphi_dy(coor(:,i),num_i)+j22*dphi_dy(coor(:,i),num_i))
             A4 = (j12*dphi_dy(coor(:,i),num_j)+j22*dphi_dy(coor(:,i),num_j))
             quad = quad + A1*A2 + A3*A4
-            write(6,*) 'i = ', i, ' num_i = ', num_i, ' num_j = ', num_j
-            write(6,*) 'dphi_dx(coor(:,i),num_i) = ', dphi_dx(coor(:,i),num_i)
-            write(6,*) 'dphi_dx(coor(:,i),num_j) = ', dphi_dx(coor(:,i),num_j)
-            write(6,*) 'dphi_dy(coor(:,i),num_i) = ', dphi_dy(coor(:,i),num_i)
-            write(6,*) 'dphi_dy(coor(:,i),num_j) = ', dphi_dy(coor(:,i),num_j)
+            !write(6,*) 'i = ', i, ' num_i = ', num_i, ' num_j = ', num_j
+            !write(6,*) 'dphi_dx(coor(:,i),num_i) = ', dphi_dx(coor(:,i),num_i)
+            !write(6,*) 'dphi_dx(coor(:,i),num_j) = ', dphi_dx(coor(:,i),num_j)
+            !write(6,*) 'dphi_dy(coor(:,i),num_i) = ', dphi_dy(coor(:,i),num_i)
+            !write(6,*) 'dphi_dy(coor(:,i),num_j) = ', dphi_dy(coor(:,i),num_j)
         end do
         !do k1 = 1,2
         !    quad1 = quad1 + inv_jac(coor_triangle,1,k1)*dphi_dx(coor,num_i)
