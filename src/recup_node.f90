@@ -133,8 +133,7 @@ subroutine points_frontiere(nb_frontiere, n_pt, p, dim_mat, points_int)!, coor_i
    j = 1
    do i = 1,n_pt
       if (p(i) /= 1) then
-         points_int(j) = i
-         !coor_int(j,1) =  
+         points_int(j) = i 
          j = j + 1
       end if
    end do
@@ -142,15 +141,17 @@ end subroutine points_frontiere
 
 
 SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
+!SUBROUTINE CellVertexVtk(nb_element, nb_triangle, coordonnees, connect, Z, PbName)
 
+   !integer, intent(in) :: nb_element, nb_triangle
+   !integer, dimension(3,nb_triangle), intent(in) :: connect
+   !real(rp), dimension(nb_element, 2), intent(in) :: coordonnees
+   !real(rp), dimension(nb_element), intent(in) :: Z
+ 
    TYPE(Donnees)   , INTENT(in)     :: DATA ! 
    TYPE(MeshDef)   , INTENT(in)     :: Mesh !
-   !TYPE(Variables) , INTENT(in)     :: Var !
-   !CHARACTER(LEN=5),INTENT(in)     :: PbName ! nom du fichier vtk
    CHARACTER(LEN=70), intent(in) :: PbName
-   !integer          ,intent(in)     :: flag_topo 
 
-   !REAL(PR)          :: u_x, u_y
    CHARACTER(LEN=75) :: vtk=" "
    INTEGER           :: is, jt
    INTEGER           :: lensd3, lPbName
@@ -162,8 +163,6 @@ SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
 
    ! ECRITURE sous FICHIER vtk !
 
-   !print*, 'Nom du fichier .vtk'
-   !read*,PbName
 
    lPbName                    = INDEX(PbName,' ') - 1
    vtk(1:lPbName)             = PbName(1:lPbName)
@@ -179,12 +178,10 @@ SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
    WRITE(61,'(A,I7,A)')'POINTS', Mesh%Npoint,'  float'
 
    DO is = 1,Mesh%Npoint
-      !if (flag_topo == 1) then
       WRITE(61,'(E13.7,2x,E13.7,2x,E13.7)') Mesh%coor(1,is), Mesh%coor(2,is), DATA%Z(is)
-      !else
-         !WRITE(61,'(E13.7,2x,E13.7,2x,E13.7)') Mesh%coor(1,is), Mesh%coor(2,is),  Var%Ua(1,is) + DATA%Z(is)
-      !end if
+      !WRITE(61,'(E13.7,2x,E13.7,2x,E13.7)') coordonnees(1,is), coordonnees(2,is), DATA%Z(is)
    END DO
+
    WRITE(61,'(A,1x,I7,1x,I6)')'CELLS',Mesh%Nelemt, 4*Mesh%Nelemt
 
    DO jt = 1,Mesh%Nelemt
@@ -207,21 +204,11 @@ SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
    WRITE(61,'(A)')'SCALARS topographie float'
    WRITE(61,'(A)')'LOOKUP_TABLE DEFAULT'
 
-   !DO is = 1,Mesh%Npoint
-   !   WRITE(61,'(ES20.7)') max(1.E-08,DATA%Z(is))
-   !END DO
 
    DO is = 1,Mesh%Npoint
       WRITE(61,'(ES20.7)') max(1.E-08,DATA%Z(is))
    END DO
 
-   !WRITE(61,'(A)')'VECTORS vitesse float'
-
-   !DO is = 1,Mesh%Npoint
-   !   u_x = vitesse(Var%Ua(1,is) , Var%Ua(2,is))
-   !   u_y = vitesse(Var%Ua(1,is) , Var%Ua(3,is))
-   !   WRITE(61,'(E13.7,2x,E13.7,2x,E13.7)') max(1.E-08,u_x), max(1.E-08,u_y), 0.
-   !END DO
 
    CLOSE(61)
 
@@ -234,8 +221,8 @@ SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
    subroutine recup_vect_U(U, L, points_int, nb_element, dim_mat)
       ! subroutine pour recuperer le vecteur U des solutions avec les points interieurs et sur la frontiere
       integer, intent(in) :: nb_element, dim_mat 
-      real(rp), dimension(nb_element), intent(inout) :: U
-      real(rp), dimension(dim_mat), intent(in) :: L
+      real(rp), dimension(nb_element), intent(inout) :: U ! vecteur U avec les solutions pour tous les points
+      real(rp), dimension(dim_mat), intent(in) :: L ! vecteur L avec les solutions des points interieurs
       integer, dimension(dim_mat), intent(in) :: points_int
       integer :: i
 

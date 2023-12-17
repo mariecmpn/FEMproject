@@ -81,6 +81,7 @@ module quadrature_P1
     end function inv_jac
 
     real(rp) function mesure_tri(coor_triangle)
+        ! fonction qui permet d'obtenir la mesure d'un triangle par la formule de Heron
         real(rp), dimension(2,3) :: coor_triangle
         real(rp) :: demiperi, a, b, c
 
@@ -98,11 +99,11 @@ module quadrature_P1
 
     real(rp) function phi(coor,i)
         ! fonction qui calcule les fonctions de base P1
-        real(rp), dimension(2) :: coor ! coordonnees du point pour lequel on calcule
-        integer :: i ! entier qui determine quelle fonction de base on calcule
         ! 1: 1-x-y (sommet S_1(0,0))
         ! 2: x (sommet S_2(1,0))
         ! 3: y (sommet S_3(0,1))
+        real(rp), dimension(2) :: coor ! coordonnees du point pour lequel on calcule
+        integer :: i ! entier qui determine quelle fonction de base on calcule
         if (i == 1) then
             phi = 1._rp - coor(1) - coor(2)
         else if (i == 2) then 
@@ -113,27 +114,35 @@ module quadrature_P1
     end function phi
 
     real(rp) function dphi_dx(coor,i)
-    real(rp), dimension(2) :: coor
-    integer :: i
-    if (i == 1) then
-        dphi_dx = -1._rp
-    else if (i == 2) then
-        dphi_dx = 1._rp
-    else if (i == 3) then
-        dphi_dx = 0._rp
-    end if
+        ! fonction qui calcule la derivee partielle en x de phi_i, i = 1, 2 ou 3
+        ! 1: 1-x-y (sommet S_1(0,0))
+        ! 2: x (sommet S_2(1,0))
+        ! 3: y (sommet S_3(0,1))
+        real(rp), dimension(2) :: coor ! coordonnees du point pour lequel on calcule
+        integer :: i ! entier qui determine quelle fonction de base on calcule
+        if (i == 1) then
+            dphi_dx = -1._rp
+        else if (i == 2) then
+            dphi_dx = 1._rp
+        else if (i == 3) then
+            dphi_dx = 0._rp
+        end if
     end function dphi_dx
 
     real(rp) function dphi_dy(coor,i)
-    real(rp), dimension(2) :: coor
-    integer :: i
-    if (i == 1) then
-        dphi_dy = -1._rp
-    else if (i == 2) then
-        dphi_dy = 0._rp
-    else if (i == 3) then
-        dphi_dy = 1._rp
-    end if
+        ! fonction qui calcule la derivee partielle en y de phi_i, i = 1, 2 ou 3
+        ! 1: 1-x-y (sommet S_1(0,0))
+        ! 2: x (sommet S_2(1,0))
+        ! 3: y (sommet S_3(0,1))
+        real(rp), dimension(2) :: coor ! coordonnees du point pour lequel on calcule
+        integer :: i ! entier qui determine quelle fonction de base on calcule
+        if (i == 1) then
+            dphi_dy = -1._rp
+        else if (i == 2) then
+            dphi_dy = 0._rp
+        else if (i == 3) then
+            dphi_dy = 1._rp
+        end if
     end function dphi_dy
 
 
@@ -143,6 +152,7 @@ module quadrature_P1
 
 
     subroutine quadrature_triangle_L(quad, coor_triangle, num)
+        ! subroutine qui calcule la formule de quadrature a 3 points pour remplir le vecteur L
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
         integer, intent(in) :: num ! numerotation locale du noeud
@@ -159,12 +169,13 @@ module quadrature_P1
         !quad = f(coor(:,1)) * phi(coor_ref(:,1),num) + f(coor(:,2)) * phi(coor_ref(:,2),num) + f(coor(:,3)) * phi(coor_ref(:,3),num) ! quadrature sans le det de la jacob. et le poids de quadrature
         quad = f(coor_triangle(:,num))
 
-        quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp)
-        !quad = quad * mesure_tri(coor_triangle) ! on multiplie le tout pour avoir notre integrale approchee
+        !quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp)
+        quad = quad * mesure_tri(coor_triangle)*(1._rp/3._rp) ! on multiplie le tout pour avoir notre integrale approchee
     end subroutine quadrature_triangle_L
 
 
     subroutine quadrature_triangle_A(quad, coor_triangle, num_i, num_j)
+        ! subroutine qui calcule la formule de quadrature a 3 points pour remplir la matrice A
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
         integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
@@ -175,10 +186,11 @@ module quadrature_P1
         real(rp) :: A1,A2,A3,A4
         real(rp) :: j11, j12, j21, j22
 
+        ! initialisation des variables
         quad = 0._rp
         quad1 = 0._rp
         quad2 = 0._rp
-        poids = (1._rp/6._rp)
+        poids = (1._rp/2._rp)
         ! on recupere les termes de l'inverse de la matrice jacobienne
         j11 = inv_jac(coor_triangle,1,1)
         j12 = inv_jac(coor_triangle,1,2)
@@ -194,6 +206,11 @@ module quadrature_P1
             A3 = (j12*dphi_dy(coor(:,i),num_i)+j22*dphi_dy(coor(:,i),num_i))
             A4 = (j12*dphi_dy(coor(:,i),num_j)+j22*dphi_dy(coor(:,i),num_j))
             quad = quad + A1*A2 + A3*A4
+            write(6,*) 'i = ', i, ' num_i = ', num_i, ' num_j = ', num_j
+            write(6,*) 'dphi_dx(coor(:,i),num_i) = ', dphi_dx(coor(:,i),num_i)
+            write(6,*) 'dphi_dx(coor(:,i),num_j) = ', dphi_dx(coor(:,i),num_j)
+            write(6,*) 'dphi_dy(coor(:,i),num_i) = ', dphi_dy(coor(:,i),num_i)
+            write(6,*) 'dphi_dy(coor(:,i),num_j) = ', dphi_dy(coor(:,i),num_j)
         end do
         !do k1 = 1,2
         !    quad1 = quad1 + inv_jac(coor_triangle,1,k1)*dphi_dx(coor,num_i)

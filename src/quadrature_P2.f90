@@ -23,6 +23,12 @@ module quadrature_P2
 
     real(rp) function phi_P2(coor,i)
         ! fonction qui calcule les fonctions de base P2
+        ! S_1(0,0)
+        ! S_2(1,0)
+        ! S_3(0,1)
+        ! S_4(0.5, 0.5)
+        ! S_5(0,0.5)
+        ! S_6(0.5,0)
         real(rp), dimension(2) :: coor ! coordonnees du point pour lequel on calcule
         integer :: i ! entier qui determine quelle fonction de base on calcule
         ! i = 1, 2, 3, 4, 5 ou 6
@@ -42,39 +48,53 @@ module quadrature_P2
     end function phi_P2
 
     real(rp) function dphi_dx_P2(coor,i)
-    real(rp), dimension(2) :: coor
-    integer :: i
-    if (i == 1) then
-        dphi_dx_P2 = -3._rp + 4._rp*coor(2)+4._rp*coor(1)
-    else if (i == 2) then
-        dphi_dx_P2 = 1._rp-4._rp*coor(1)
-    else if (i == 3) then
-        dphi_dx_P2 = 0._rp
-    else if (i == 4) then
-        dphi_dx_P2 = 4._rp*coor(2)
-    else if (i == 5) then
-        dphi_dx_P2 = -4._rp*coor(2)
-    else if (i == 6) then
-        dphi_dx_P2 = 4._rp*coor(1) - 4._rp*coor(2) - 8._rp*coor(1)
-    end if
+        ! fonction qui calcule la derivee en x de phi_i, i = 1,..,6
+        ! S_1(0,0)
+        ! S_2(1,0)
+        ! S_3(0,1)
+        ! S_4(0.5, 0.5)
+        ! S_5(0,0.5)
+        ! S_6(0.5,0)
+        real(rp), dimension(2) :: coor ! coordonnees du point pour lequel on calcule
+        integer :: i ! entier qui determine quelle fonction de base on calcule
+        if (i == 1) then
+            dphi_dx_P2 = -3._rp + 4._rp*coor(2)+4._rp*coor(1)
+        else if (i == 2) then
+            dphi_dx_P2 = 1._rp-4._rp*coor(1)
+        else if (i == 3) then
+            dphi_dx_P2 = 0._rp
+        else if (i == 4) then
+            dphi_dx_P2 = 4._rp*coor(2)
+        else if (i == 5) then
+            dphi_dx_P2 = -4._rp*coor(2)
+        else if (i == 6) then
+            dphi_dx_P2 = 4._rp*coor(1) - 4._rp*coor(2) - 8._rp*coor(1)
+        end if
     end function dphi_dx_P2
 
     real(rp) function dphi_dy_P2(coor,i)
-    real(rp), dimension(2) :: coor
-    integer :: i
-    if (i == 1) then
-        dphi_dy_P2 = -3._rp + 4._rp*coor(1)+4._rp*coor(2)
-    else if (i == 2) then
-        dphi_dy_P2 = 0._rp
-    else if (i == 3) then
-        dphi_dy_P2 = 1._rp-4._rp*coor(2)
-    else if (i == 4) then
-        dphi_dy_P2 = 4._rp*coor(1)
-    else if (i == 5) then
-        dphi_dy_P2 = 4._rp*coor(2) - 4._rp*coor(1) - 8._rp*coor(2)
-    else if (i == 6) then
-        dphi_dy_P2 = - 4._rp*coor(1)
-    end if
+        ! fonction qui calcule la derivee en y de phi_i, i = 1,..,6
+        ! S_1(0,0)
+        ! S_2(1,0)
+        ! S_3(0,1)
+        ! S_4(0.5, 0.5)
+        ! S_5(0,0.5)
+        ! S_6(0.5,0)
+        real(rp), dimension(2) :: coor ! coordonnees du point pour lequel on calcule
+        integer :: i ! entier qui determine quelle fonction de base on calcule
+        if (i == 1) then
+            dphi_dy_P2 = -3._rp + 4._rp*coor(1)+4._rp*coor(2)
+        else if (i == 2) then
+            dphi_dy_P2 = 0._rp
+        else if (i == 3) then
+            dphi_dy_P2 = 1._rp-4._rp*coor(2)
+        else if (i == 4) then
+            dphi_dy_P2 = 4._rp*coor(1)
+        else if (i == 5) then
+            dphi_dy_P2 = 4._rp*coor(2) - 4._rp*coor(1) - 8._rp*coor(2)
+        else if (i == 6) then
+            dphi_dy_P2 = - 4._rp*coor(1)
+        end if
     end function dphi_dy_P2
 
     subroutine init_milieux_triref(coor_milieu)
@@ -91,6 +111,7 @@ module quadrature_P2
     !--------------------------------------------!
 
     subroutine quadrature_triangle_L_P2(quad, coor_triangle, num)
+        ! subroutine qui calcule la formule de quadrature a 6 points pour remplir le vecteur L
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
         integer, intent(in) :: num ! numerotation locale du noeud
@@ -124,6 +145,7 @@ module quadrature_P2
 
 
     subroutine quadrature_triangle_A_P2(quad, coor_triangle, num_i, num_j)
+        ! subroutine qui calcule la formule de quadrature a 6 points pour remplir la matrice A
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
         integer, intent(in) :: num_i, num_j ! numerotation locale du noeud
@@ -172,13 +194,14 @@ module quadrature_P2
     !--------------------------------------------!
 
     subroutine recherche_milieux(coor_milieux, NUBO, Nseg, coordonnees, nb_element)
+        ! Subroutine qui permet de trouver les coordonnees milieux de chaque segment 
         integer, intent(in) :: Nseg,nb_element
         integer, dimension(2, Nseg), intent(in) :: NUBO
         real(rp), dimension(Nseg,2), intent(inout) :: coor_milieux
         real(rp), dimension(nb_element,2), intent(in) :: coordonnees
         integer :: i, S1, S2
 
-        coor_milieux(:,:) = 0._rp
+        coor_milieux(:,:) = 0._rp ! on initialise a 0
         do i = 1,Nseg
             S1 = NUBO(1,i)
             S2 = NUBO(2,i)
@@ -188,18 +211,19 @@ module quadrature_P2
     end subroutine recherche_milieux
 
     subroutine pts_et_mid_int(tous_pts_int, dim_matP2, posi_sommet_mid, nb_element, Nseg)
+        ! Subroutine qui met dans tous_pts_int les indices des points interieurs (milieux et sommets)
         integer, intent(in) :: nb_element, Nseg
         integer, intent(inout) :: dim_matP2
         integer, dimension(:), allocatable, intent(inout) :: tous_pts_int
         integer, dimension(nb_element+Nseg), intent(in) :: posi_sommet_mid
-        integer, dimension(nb_element+Nseg) :: points
+        integer, dimension(nb_element+Nseg) :: points ! on surestime le nombre de points a l'interieur du domaine
         integer :: i
 
-        dim_matP2 = 0
+        dim_matP2 = 0 ! on compte le nombre de points a l'interieur 
         do i = 1,nb_element+Nseg
             if (posi_sommet_mid(i) == 0) then
                 dim_matP2 = dim_matP2+1
-                points(dim_matP2) = i
+                points(dim_matP2) = i ! on enregistre dans points l'indice du point interieur 
             end if
         end do
         allocate(tous_pts_int(dim_matP2))
@@ -207,6 +231,7 @@ module quadrature_P2
     end subroutine pts_et_mid_int
 
     subroutine ttes_positions(posi_sommet_mid, positions, nb_element, Nseg, NUBO)
+        ! Subroutine qui remplit posi_sommet_mid avec les positions des points (sommets et milieux): 1 si sur le bord, 0 sinon
         integer, dimension(nb_element+Nseg), intent(inout) :: posi_sommet_mid
         integer, dimension(nb_element), intent(in) :: positions
         integer, dimension(2,Nseg) :: NUBO
@@ -214,26 +239,28 @@ module quadrature_P2
         integer :: i
 
         posi_sommet_mid(:) = 0
-        posi_sommet_mid(1:nb_element) = positions(:)
+        posi_sommet_mid(1:nb_element) = positions(:) ! on a deja les positions des sommets
 
-        do i = 1,Nseg
-            if ((positions(NUBO(1,i)) == 1) .AND. (positions(NUBO(2,i)) == 1)) then
-                posi_sommet_mid(nb_element+i) = 1 ! si les deux sommets du segmetn sont sur le bord, alors le milieu est aussi sur le bord
+        do i = 1,Nseg ! pour les milieux, on parcourt les segments dans NUBO
+            if ((positions(NUBO(1,i)) == 1) .AND. (positions(NUBO(2,i)) == 1)) then 
+                posi_sommet_mid(nb_element+i) = 1 ! si les deux sommets du segment sont sur le bord, alors le milieu est aussi sur le bord
             end if 
         end do
     end subroutine ttes_positions
 
 
     subroutine connect_milieux(tri_s_m, connect, nb_triangle, NUBO, Nseg, nb_element)
+        ! Subroutine qui permet de recuperer les numerotations globales de tous les points (sommets et milieux) d'un triangle
+        ! ils sont enregistres dans tri_s_m => de 1 a 3: les numerotations des sommets; de 4 a 6: les numerotations des milieux
         integer, intent(in) :: nb_triangle, Nseg, nb_element
         integer, dimension(6,nb_triangle), intent(inout) :: tri_s_m
         integer, dimension(3,nb_triangle), intent(in) :: connect
         integer, dimension(2,NSeg), intent(in) :: NUBO
         integer :: m, S1, S2, k
 
-        do m = 1,nb_triangle
+        do m = 1,nb_triangle ! boucle sur les triangles
             ! on cherche les indices globaux des sommets et des milieux
-            tri_s_m(1:3,m) = connect(:,m)
+            tri_s_m(1:3,m) = connect(:,m) ! on connait deja les sommets grace a connect
             ! premier segment
             if (tri_s_m(1,m) < tri_s_m(2,m)) then
                 S1 = tri_s_m(1,m)
