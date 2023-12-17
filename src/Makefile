@@ -12,7 +12,7 @@ ODIR = ../bin
 EXEDIR = ..
 
 # Liste des fichiers binaires
-OBJS = $(ODIR)/main.o $(ODIR)/stockage_creux.o $(ODIR)/remplissage_A_L.o $(ODIR)/quadrature_P2.o $(ODIR)/quadrature.o $(ODIR)/recup_node.o $(ODIR)/computation.o $(ODIR)/numerics.o
+OBJS = $(ODIR)/main.o $(ODIR)/stockage_creux.o $(ODIR)/remplissage_A_L.o $(ODIR)/quadrature_P2.o $(ODIR)/quadrature.o $(ODIR)/recup_node.o $(ODIR)/read_file.o $(ODIR)/computation.o $(ODIR)/numerics.o
 # Liste des fichiers mod
 MODS = stockage_matrice.mod quadrature_P1.mod quadrature_P2.mod to_vtk.mod numerics.mod remplissage_a_l.mod computation.mod
 
@@ -47,3 +47,5 @@ $(ODIR)/remplissage_A_L.o: remplissage_A_L.f90 quadrature_P2.f90 quadrature.f90 
 	$(CC) -c $(FFLAGS) remplissage_A_L.f90 -o $(ODIR)/remplissage_A_L.o
 $(ODIR)/computation.o: computation.f90 numerics.f90
 	$(CC) -c $(FFLAGS) computation.f90 -lblas -o $(ODIR)/computation.o
+$(ODIR)/read_file.o: read_file.f90 numerics.f90
+	$(CC) -c $(FFLAGS) read_file.f90 -lblas -o $(ODIR)/read_file.o

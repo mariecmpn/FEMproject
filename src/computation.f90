@@ -97,62 +97,71 @@ module computation
         write(6,*) 'Nombre d iterations gradient conjugue: ', iter
     end subroutine gradient_conjugue
 
-
-  ! routine pour calculer le produit d une matrice creuse A par un vecteur  
-  SUBROUTINE PRODUIT_MxV_CREUX (Mat, n, X, Y)
-    IMPLICIT NONE ! Mat . X = Y
-    type(mat_creuse), INTENT(in) :: Mat
-    INTEGER, INTENT(in) :: n
-    REAL(rp), DIMENSION(n), INTENT(in) :: X
-    REAL(rp), DIMENSION(n), INTENT(out) :: Y
-    INTEGER :: i = 0, j = 0, ii, non0
-    INTEGER :: curseur = 0 ! Indicateur de position dans A
-    
-    Y = 0.
-    curseur = 0
-    i = 1
-    DO WHILE (curseur < Mat%NCoefMat)
-        non0 = Mat%Jposi(i+1) - Mat%Jposi(i)
-        do ii = 1,non0
-            curseur = curseur + 1
-            j = Mat%JvCell(curseur) ! Colonne du terme non-nul où est le curseur
-            Y(i) = Y(i) + Mat%Tmat(curseur) * X(j)
+ 
+    subroutine prod_matvect_creux(mat, n, X, Y)
+        ! Subroutine qui calcule le produit de d'une matrice en stockage creux mat par un vecteur X
+        type(mat_creuse), intent(in) :: mat
+        integer, intent(in) :: n
+        real(rp), dimension(n), intent(in) :: X
+        real(rp), dimension(n), intent(out) :: Y
+        integer :: i, j, jj, non0
+        integer :: c = 0 ! Indicateur de position dans A
+        
+        Y = 0._rp
+        !curseur = 0
+        !i = 1
+        j = 0
+        c = 0
+        do i = 1,n
+            !non0 = mat%Jposi(i+1) - mat%Jposi(i)
+            do j = mat%Jposi(i), mat%Jposi(i+1)-1
+                !jj = mat%JvCell(j)
+                Y(i) = Y(i) + mat%Tmat(j)*X(mat%JvCell(j))
+            end do
         end do
-        i = i+1
-    END DO
-    
-  END SUBROUTINE PRODUIT_MxV_CREUX
+        !DO WHILE (curseur < mat%NCoefMat)
+        !    non0 = mat%Jposi(i+1) - mat%Jposi(i)
+        !    do ii = 1,non0
+        !        curseur = curseur + 1
+        !        j = mat%JvCell(curseur) ! Colonne du terme non-nul où est le curseur
+        !        Y(i) = Y(i) + mat%Tmat(curseur) * X(j)
+        !    end do
+        !    i = i+1
+        !END DO
+        
+    end subroutine prod_matvect_creux
 
   
 
-  SUBROUTINE Gradient_conjugue_CREUX (A, Y, conv, n)
-    IMPLICIT NONE
-    INTEGER, INTENT(in)             ::  n
-    type(mat_creuse), INTENT(in)         ::  A
-    REAL(rp), DIMENSION(n), INTENT(inout)  ::  Y
-    REAL(rp), DIMENSION(n) ::  X
-    REAL(rp), DIMENSION(n) :: d, gradJ0, gradJ1, tmp
-    REAL(rp) :: rho = 0., residu = 0.
-    INTEGER :: iteration = 0
-    real(rp), intent(in) :: conv
-    
-    X = 0.
-    CALL PRODUIT_MxV_CREUX(A, n, X, tmp) ! tmp = A.X
-    gradJ0 = tmp - Y
-    d = -gradJ0
-    residu = 1.
-    iteration = 0
-    DO WHILE ((residu > conv) .AND. (iteration < 1000))
-       iteration = iteration + 1
-       CALL PRODUIT_MxV_CREUX(A, n, d, tmp) ! tmp = A.d
-       rho = -dot_product(gradJ0, d) / dot_product(d, tmp)
-       X = X + rho * d
-       gradJ1 = gradJ0 + rho * tmp
-       d = -gradJ1 + sum(gradJ1**2) / sum(gradJ0**2) * d
-       residu = maxval(gradJ1)
-       gradJ0 = gradJ1
-    END DO
-    Y = X
-  END SUBROUTINE Gradient_Conjugue_CREUX
+    SUBROUTINE Gradient_conjugue_CREUX (A, Y, conv, dim_mat)
+        IMPLICIT NONE
+        INTEGER, INTENT(in)             ::  dim_mat
+        type(mat_creuse), INTENT(in)         ::  A
+        REAL(rp), DIMENSION(dim_mat), INTENT(inout)  ::  Y
+        REAL(rp), DIMENSION(dim_mat) ::  X
+        REAL(rp), DIMENSION(dim_mat) :: d, gradJ0, gradJ1, prod
+        REAL(rp) :: rho, r
+        INTEGER :: iter
+        real(rp), intent(in) :: conv
+        
+        X = 0.
+        CALL prod_matvect_creux(A, dim_mat, X, prod) 
+        gradJ0 = prod - Y
+        d = -gradJ0
+        r = 1.
+        iter = 0
+        DO WHILE ((r > conv) .AND. (iter < 1000))
+            iter = iter + 1
+            CALL prod_matvect_creux(A, dim_mat, d, prod) ! tmp = A.d
+            rho = -prod_scal(gradJ0, d, dim_mat) / prod_scal(d, prod, dim_mat)
+            X = X + rho * d
+            gradJ1 = gradJ0 + rho * prod
+            d = -gradJ1 + sum(gradJ1**2) / sum(gradJ0**2) * d
+            r = norme_inf(gradJ1, dim_mat)
+            gradJ0 = gradJ1
+        END DO
+        Y = X
+        write(6,*) 'Nombre d iterations gradient conjugue: ', iter
+    END SUBROUTINE Gradient_Conjugue_CREUX
 
 end module computation

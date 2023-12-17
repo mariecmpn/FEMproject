@@ -169,8 +169,8 @@ module quadrature_P1
         !quad = f(coor(:,1)) * phi(coor_ref(:,1),num) + f(coor(:,2)) * phi(coor_ref(:,2),num) + f(coor(:,3)) * phi(coor_ref(:,3),num) ! quadrature sans le det de la jacob. et le poids de quadrature
         quad = f(coor_triangle(:,num))
 
-        quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp)
-        !quad = quad * mesure_tri(coor_triangle)*(1._rp/3._rp) ! on multiplie le tout pour avoir notre integrale approchee
+        !quad = abs(det_Jac(coor_triangle)) * quad * (1._rp/6._rp)
+        quad = quad * mesure_tri(coor_triangle)*(1._rp/3._rp) ! on multiplie le tout pour avoir notre integrale approchee
     end subroutine quadrature_triangle_L
 
 

@@ -19,6 +19,40 @@ module stockage_matrice
 
     contains
 
+    subroutine ordonne_pts(new_coor, new_order, new_t, coordonnees, nb_element, positions, dim_mat, connect, nb_triangle)
+        integer, intent(in) :: nb_element, dim_mat, nb_triangle
+        real(rp), intent(out), dimension(nb_element,2) :: new_coor
+        integer, intent(out), dimension(nb_element) :: new_order
+        real(rp), intent(in), dimension(nb_element,2) :: coordonnees
+        integer, intent(out), dimension(3,nb_triangle) :: new_t
+        integer, dimension(nb_element), intent(in) :: positions 
+        integer, dimension(3,nb_triangle), intent(in) :: connect
+        integer, dimension(nb_element) :: inv_new_order
+        integer :: i,j,j1,j2
+
+        j1 = 0
+        j2 = 0
+        do i = 1,nb_element
+            if (positions(i) == 0) then
+                j1 = j1 + 1
+                new_order(j1) = i
+                inv_new_order(i) = j1
+                new_coor(j1,:) = coordonnees(i,:)
+            else if (positions(i) == 1) then
+                j2 = j2 + 1
+                new_order(j2+dim_mat) = i
+                inv_new_order(i) = j2+dim_mat
+                new_coor(j2+dim_mat,:) = coordonnees(i,:)
+            end if
+        end do
+
+        do i = 1,nb_triangle
+            do j = 1,3
+                new_t(j,i) = inv_new_order(connect(j,i))
+            end do
+        end do
+    end subroutine ordonne_pts
+
     !--------------------------------------------!
     !   Remplissage vecteur NUBO des segments
     !               du maillage
@@ -180,54 +214,54 @@ module stockage_matrice
     !               de la matrice A
     !--------------------------------------------!
 
-    subroutine calcul_NcoefMat(NUBO, Nseg, NcoefMat, nb_element)
+    subroutine calcul_NcoefMat(NUBO, Nseg, NcoefMat, dim_mat)
         ! Subroutine pour le calcul du coefficient NCoefMat
-        integer, intent(in) :: nb_element, Nseg
+        integer, intent(in) :: dim_mat, Nseg
         integer, intent(inout) :: NcoefMat
         integer, dimension(2, Nseg), intent(in) :: NUBO
         integer :: iseg, js, is
 
         ! Calcul de NcoefMat
-        NcoefMat=nb_element ! contribution des termes diagonaux a_ii 
+        NcoefMat=dim_mat ! contribution des termes diagonaux a_ii 
         do iseg=1,Nseg
             is=NUBO(1,iseg) 
             js=NUBO(2,iseg)
-            if (is<=nb_element .and. js<=nb_element) then
+            if (is<=dim_mat .and. js<=dim_mat) then
                 NcoefMat=NcoefMat+2
             end if
         end do
     end subroutine calcul_NCoefMat
 
 
-    subroutine tableaux_assemblage_mat(Jposi, JvCell, Ncoefmat, nb_element, NUBO, Nseg)
+    subroutine tableaux_assemblage_mat(Jposi, JvCell, Ncoefmat, dim_mat, NUBO, Nseg)
         ! Subroutine qui remplit les tableaux Jposi et JvCell
-        integer, intent(in) :: nb_element, Nseg
+        integer, intent(in) :: dim_mat, Nseg
         integer, intent(in) :: NcoefMat
         integer, dimension(2, Nseg), intent(in) :: NUBO
         !real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
         integer, dimension(1:NcoefMat), intent(inout) :: JvCell
-        integer, dimension(1:nb_element+1), intent(inout) :: Jposi
+        integer, dimension(1:dim_mat+1), intent(inout) :: Jposi
         integer, dimension(:), allocatable :: IndPL
         integer :: iseg, js, is, jv, kv, tmp
 
-        do is=1,nb_element+1
+        do is=1,dim_mat+1
             Jposi(is)=is
         end do
         do iseg=1,Nseg
             is=NUBO(1,iseg)
             js=NUBO(2,iseg)
-            if (is<=nb_element .and. js<=nb_element) then ! si on est sur un segment interieur
-                Jposi(is+1:nb_element+1)=Jposi(is+1:nb_element+1)+1
-                Jposi(js+1:nb_element+1)=Jposi(js+1:nb_element+1)+1
+            if (is<=dim_mat .and. js<=dim_mat) then ! si on est sur un segment interieur
+                Jposi(is+1:dim_mat+1)=Jposi(is+1:dim_mat+1)+1
+                Jposi(js+1:dim_mat+1)=Jposi(js+1:dim_mat+1)+1
             end if
         end do
 
         ! Initialisation de IndPL
-        allocate(IndPL(1:nb_element))
-        IndPL(1:nb_element)=Jposi(1:nb_element)
+        allocate(IndPL(1:dim_mat))
+        IndPL(1:dim_mat)=Jposi(1:dim_mat)
 
         ! Indices de colonnes des termes diagonaux
-        do is=1,nb_element
+        do is=1,dim_mat
             JvCell(IndPL(is))=is
             IndPL(is)=IndPL(is)+1
         end do
@@ -236,7 +270,7 @@ module stockage_matrice
         do iseg=1,Nseg
             is=NUBO(1,iseg) 
             js=NUBO(2,iseg)
-            if (is<=nb_element .and. js<=nb_element) then
+            if (is<=dim_mat .and. js<=dim_mat) then
                 JvCell(IndPL(is))=js
                 IndPL(is)=IndPL(is)+1
                 JvCell(IndPL(js))=is
@@ -244,7 +278,7 @@ module stockage_matrice
             end if 
         end do
 
-        do is=1,nb_element ! Boucle sur les lignes
+        do is=1,dim_mat ! Boucle sur les lignes
             do jv=Jposi(is+1)-1,Jposi(is),-1 ! Boucle descendante sur les elements non nuls de la ligne
                 do kv=Jposi(is)+1,jv ! Boucle sur les premiers termes
                     if (JvCell(kv-1)>JvCell(kv)) then 
@@ -273,16 +307,16 @@ module stockage_matrice
     end function AmatLoc
 
 
-    subroutine stockage_morse(A, Tmat, Jposi, JvCell, coordonnees, connect, nb_element, nb_triangle, NcoefMat, positions)
+    subroutine stockage_morse(A, Tmat, Jposi, JvCell, coordonnees, connect, dim_mat, nb_triangle, NcoefMat, nb_element)
         ! Subroutine pour le remplissage de Tmat
         type(mat_creuse), intent(out) :: A
-        integer, intent(in) :: nb_element, nb_triangle, NcoefMat
+        integer, intent(in) :: nb_element, nb_triangle, NcoefMat, dim_mat
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
         integer, dimension(1:NcoefMat), intent(inout) :: JvCell
-        integer, dimension(1:nb_element+1), intent(inout) :: Jposi
+        integer, dimension(1:dim_mat+1), intent(inout) :: Jposi
         real(rp), dimension(nb_element, 2), intent(in) :: coordonnees
         integer, dimension(3,nb_triangle), intent(in) :: connect
-        integer, dimension(nb_element), intent(in) :: positions
+        !integer, dimension(nb_element), intent(in) :: positions
         real(rp), dimension(3,3) :: Aloc
         real(rp), dimension(2,3) :: coor_triangle
         integer :: i,j,m
@@ -294,14 +328,15 @@ module stockage_matrice
                     coor_triangle(j,i) = coordonnees(connect(i,m),j)
                 end do
             end do
-            !if ((positions(connect(1,m)) == 0) .AND. (positions(connect(2,m)) == 0) .AND. (positions(connect(2,m)) == 0)) then
+            !if ((positions(connect(1,m)) == 0) .AND. (positions(connect(2,m)) == 0) .AND. (positions(connect(3,m)) == 0)) then
                 Aloc = AmatLoc(coor_triangle)
-                call Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat, positions)
+                call Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat, dim_mat)
             !end if
         end do
 
+        ! on remplit A
         A%NcoefMat = NCoefMat
-        A%nb_element = nb_element
+        A%nb_element = dim_mat
         allocate(A%Tmat(1:A%NcoefMat), A%JvCell(1:A%NcoefMat), A%Jposi(1:A%nb_element+1))
         A%Tmat(:) = Tmat(:)
         A%JvCell(:) = JvCell(:)
@@ -309,68 +344,68 @@ module stockage_matrice
     end subroutine stockage_morse
 
 
-    subroutine Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat, positions)
+    subroutine Assemble(m, connect, Aloc, Tmat, Jposi, JvCell, nb_element, nb_triangle, NcoefMat, dim_mat)
         ! Subroutine qui ajoute la contribution Aloc a Tmat aux bons endroits
-        integer, intent(in) :: m, nb_element, nb_triangle, NcoefMat
+        integer, intent(in) :: m, nb_triangle, nb_element, NcoefMat, dim_mat
         integer, dimension(3,nb_triangle), intent(in) :: connect
-        integer, dimension(nb_element), intent(in) :: positions
+        !integer, dimension(nb_element), intent(in) :: positions
         real(rp), dimension(3,3), intent(in) :: Aloc
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
         integer, dimension(1:NcoefMat), intent(in) :: JvCell
-        integer, dimension(1:nb_element+1), intent(in) :: Jposi
+        integer, dimension(1:dim_mat+1), intent(in) :: Jposi
         integer :: i,j,k
         ! On recupere les numeros globaux des sommets du triangle 
         i = connect(1,m)
         j = connect(2,m)
         k = connect(3,m)
         ! On ajoute les contributions ligne par ligne ! Pour la ligne i, on a
-        !if (i<=nb_element) then ! on ne touche pas le bord
-        if (positions(i) == 0) then
+        if (i<=dim_mat) then ! on ne touche pas le bord
+        !if (positions(i) == 0) then
             ! on ajoute dans A la contribution du triangle au terme a(phi_i,phi_i) :
-            call Ajout(i,i,Aloc(1,1),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
+            call Ajout(i,i,Aloc(1,1),Tmat,Jposi,JvCell, nb_element, NcoefMat, dim_mat) 
         end if
-        if (positions(j) == 0) then ! on ne touche pas le bord
+        if (j<=dim_mat .AND. i<=dim_mat) then ! on ne touche pas le bord
             ! on ajoute dans A la contribution du triangle au terme a(phi_i,phi_j) :
-            call Ajout(i,j,Aloc(1,2),Tmat,Jposi,JvCell,nb_element, NcoefMat) 
+            call Ajout(i,j,Aloc(1,2),Tmat,Jposi,JvCell,nb_element, NcoefMat, dim_mat) 
         end if
-        if (positions(k) == 0) then ! on ne touche pas le bord
+        if (k<=dim_mat .AND. i<=dim_mat) then ! on ne touche pas le bord
             ! on ajoute dans A la contribution du triangle au terme a(phi_i,phi_k) : 
-            call Ajout(i,k,Aloc(1,3),Tmat,Jposi,JvCell, nb_element, NcoefMat)
+            call Ajout(i,k,Aloc(1,3),Tmat,Jposi,JvCell, nb_element, NcoefMat, dim_mat)
         end if
         ! Remarque : si on doit ajouter des termes de bord, on le fait ici avec un else end if
 
         ! Pour la ligne j, on recommence une procedure similaire
-        if (positions(i)== 0) then ! on ne touche pas le bord
-            call Ajout(j,i,Aloc(2,1),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
+        if (i<=dim_mat .AND. j<=dim_mat) then ! on ne touche pas le bord
+            call Ajout(j,i,Aloc(2,1),Tmat,Jposi,JvCell, nb_element, NcoefMat, dim_mat) 
         end if
-        if (positions(j)== 0) then ! on ne touche pas le bord
-            call Ajout(j,j,Aloc(2,2),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
+        if (j<=dim_mat) then ! on ne touche pas le bord
+            call Ajout(j,j,Aloc(2,2),Tmat,Jposi,JvCell, nb_element, NcoefMat, dim_mat) 
         end if
-        if (positions(k)== 0) then ! on ne touche pas le bord
-            call Ajout(j,k,Aloc(2,3),Tmat,Jposi,JvCell, nb_element, NcoefMat)
+        if (k<=dim_mat .AND. j<=dim_mat) then ! on ne touche pas le bord
+            call Ajout(j,k,Aloc(2,3),Tmat,Jposi,JvCell, nb_element, NcoefMat, dim_mat)
         end if
 
         ! Pour la ligne k, on recommence une procedure similaire
-        if (positions(i) == 0) then ! on ne touche pas le bord
-            call Ajout(k,i,Aloc(3,1),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
+        if (i<=dim_mat .AND. k<=dim_mat) then ! on ne touche pas le bord
+            call Ajout(k,i,Aloc(3,1),Tmat,Jposi,JvCell, nb_element, NcoefMat, dim_mat) 
         end if
-        if (positions(j) == 0) then ! on ne touche pas le bord
-            call Ajout(k,j,Aloc(3,2),Tmat,Jposi,JvCell, nb_element, NcoefMat) 
+        if (j<=dim_mat .AND. k<=dim_mat) then ! on ne touche pas le bord
+            call Ajout(k,j,Aloc(3,2),Tmat,Jposi,JvCell, nb_element, NcoefMat, dim_mat) 
         end if
-        if (positions(k) == 0) then ! on ne touche pas le bord
-            call Ajout(k,k,Aloc(3,3),Tmat,Jposi,JvCell, nb_element, NcoefMat)
+        if (k<=dim_mat) then ! on ne touche pas le bord
+            call Ajout(k,k,Aloc(3,3),Tmat,Jposi,JvCell, nb_element, NcoefMat, dim_mat)
         end if
     end subroutine Assemble
 
 
-    subroutine Ajout(ii, jj, coefA, Tmat, Jposi, JvCell, nb_element, NcoefMat)
+    subroutine Ajout(ii, jj, coefA, Tmat, Jposi, JvCell, nb_element, NcoefMat, dim_mat)
         ! Subroutine qui ajoute, pour les indices ii et jj, coefA dans Tmat 
-        integer, intent(in) :: nb_element, NcoefMat
+        integer, intent(in) :: nb_element, NcoefMat, dim_mat
         integer, intent(in) :: ii, jj
         real(rp), intent(in) :: coefA
         real(rp), dimension(1:NcoefMat), intent(inout) :: Tmat
         integer, dimension(1:NcoefMat), intent(in) :: JvCell
-        integer, dimension(1:nb_element+1), intent(in) :: Jposi
+        integer, dimension(1:dim_mat+1), intent(in) :: Jposi
         integer :: j
         logical :: trouver
 
@@ -383,10 +418,14 @@ module stockage_matrice
             end if
         end do
         if (trouver.eqv..false.) then
-            print*,"Probleme d’assemblage de la matrice A"
+            print*,"Probleme d’assemblage de la matrice A: "
+            write(6,*) "CoefA = ", coefA
+            write(6,*) "ii = ", ii
+            write(6,*) "jj = ", jj
             stop 
         end if
     end subroutine Ajout
+
 
     !--------------------------------------------!
     !     Reconstruction de A grace a son
@@ -406,7 +445,8 @@ module stockage_matrice
 
         A_avec_frontiere(:,:) = 0._rp
         jj = 1 
-        do i = 1,nb_element
+        !do i = 1,nb_element
+        do i = 1,A_creuse%nb_element
             ! On regarde le nombre de termes non nuls pour la ligne i
             nb_non0 = A_creuse%Jposi(i+1) - A_creuse%Jposi(i)
             !print*, nb_non0
@@ -416,12 +456,31 @@ module stockage_matrice
             end do
         end do
 
+        A(:,:) = A_avec_frontiere(1:dim_mat,1:dim_mat)
+
         ! Enfin on ne garde que les points interieurs
-        do i = 1,dim_mat
-            do j = 1,dim_mat
-                A(i,j) = A_avec_frontiere(points_int(i),points_int(j))
-            end do
-        end do
+        !do i = 1,dim_mat
+        !    do j = 1,dim_mat
+        !        A(i,j) = A_avec_frontiere(points_int(i),points_int(j))
+        !    end do
+        !end do
     end subroutine reconstruction_A_morse
+
+    !subroutine A_creuse_sans_bord(A, A_creuse, positions, nb_element)
+    !    integer, intent(in) :: nb_element
+    !    type(mat_creuse), intent(in) :: A_creuse
+    !    type(mat_creuse), intent(inout) :: A
+    !    integer, dimension(nb_element), intent(in) :: positions
+    !    integer :: i
+
+    !    ii = 0
+    !    allocate()
+    !    do i = nb_element
+    !        if (positions(i) == 0) then 
+    !            ii 
+    !        end if 
+    !    end do 
+
+    !end subroutine A_creuse_sans_bord
 
 end module stockage_matrice

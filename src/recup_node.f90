@@ -169,6 +169,8 @@ SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
    vtk(lPbName+1:lPbName+5)   = '.vtk '
    lensd3                     = lPbName+4
    OPEN(UNIT=61,FILE=vtk(1:lensd3) )
+
+   write(6,*) "Ecriture dans le fichier: ", vtk(1:lensd3)
    
    ! En-tete du fichier vtk
    WRITE(61,'(A)')'# vtk DataFile Version 3.0'
@@ -226,10 +228,11 @@ SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
       integer, dimension(dim_mat), intent(in) :: points_int
       integer :: i
 
-      U(:) = 0._rp
-      do i =1,dim_mat
-         U(points_int(i)) = L(i)
-      end do
+      U(1:dim_mat) = L(:)
+      U(dim_mat+1:nb_element) = 0._rp
+      !do i =1,dim_mat
+      !   U(points_int(i)) = L(i)
+      !end do
    end subroutine recup_vect_U
 
    subroutine recup_vect_U_P2(U, L, tous_pts_int, nb_element, dim_matP2, Nseg)

@@ -2,6 +2,7 @@ Projet Methodes pour les fluides incompressibles
 Resolution d'un probleme de Poisson en 2D par une méthode éléments finis
 
 Author: Marie COMPAIN
+(https://github.com/mariecmpn/FEMproject)
 
 CONTENU DU DOSSIER:
 - src/main.f90: programme principal en Fortran de la résolution du problème
@@ -12,6 +13,8 @@ CONTENU DU DOSSIER:
 - src/quadrature_P2.f90: module en Fortran pour la résolution en élément fini P2-Lagrange
 - src/stockage_creux.f90: module en Fortran pour le stockage creux de la matrice de masse A
 - src/computation.f90: module en Fortran pour la résolution du système linéaire AU=L par la méthode du gradient conjugué et des fonctions utiles pour cet algorithme (norme infinie...)
+- src/read_file.f90: module en Fortran pour la lecture de init.dat.
+- carre.*: fichiers maillage créés avec Triangle
 
 LIBRAIRIES REQUISES:
 Le code fait appel à BLAS (pour le calcul de cetaines normes ou sommes), et à LAPACK (pour la résolution du système linéaire).
@@ -19,3 +22,8 @@ Le code fait appel à BLAS (pour le calcul de cetaines normes ou sommes), et à 
 COMPILATION:
 Il faut aller dans le dossier src et faire "make". Le fichier exécutable sera stocké dans le dossier parent de src, et les fichiers binaires seront dans le dossier bin.
 La règle "clean" permet de supprimer les fichiers binaires et exécutable.
+On choisit dans init.dat:
+- le fichier maillage
+- le nom du fichier vtk qui sera créé
+- si on utilise ou non le stockage creux de la matrice
+- si on utilise des éléments finis P1 ou P2

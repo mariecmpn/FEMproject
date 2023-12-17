@@ -1,0 +1,8 @@
+carre.3  :: nom du fichier de maillage
+graphe   :: nom du fichier vtk contenant la solution approchee
+1        :: Stockage de la matrice: 0 pour normal, 1 pour creux
+1        :: degre des elements finis: 1 pour P1 et 2 pour P2
+
+
+
+
