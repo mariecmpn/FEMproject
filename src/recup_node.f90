@@ -232,5 +232,19 @@ SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
       end do
    end subroutine recup_vect_U
 
+   subroutine recup_vect_U_P2(U, L, tous_pts_int, nb_element, dim_matP2, Nseg)
+      integer, intent(in) :: nb_element, dim_matP2, Nseg
+      real(rp), dimension(nb_element), intent(inout) :: U ! vecteur U avec les solutions pour tous les points
+      real(rp), dimension(dim_matP2), intent(in) :: L ! vecteur L avec les solutions des points interieurs
+      integer, dimension(dim_matP2), intent(in) :: tous_pts_int
+      integer :: i
+      real(rp), dimension(nb_element+Nseg) :: U_m
+
+      U_m(:) = 0._rp
+      do i =1,dim_matP2
+         U_m(tous_pts_int(i)) = L(i)
+      end do
+      U(:) = U_m(1:nb_element)
+   end subroutine recup_vect_U_P2
 
 end module to_vtk
