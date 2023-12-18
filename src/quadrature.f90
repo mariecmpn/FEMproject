@@ -156,7 +156,7 @@ module quadrature_P1
         real(rp), intent(inout) :: quad ! reel qui contiendra la valeur de la quadrature en sortie
         real(rp), intent(in), dimension(2,3) :: coor_triangle ! coordonnees des sommets du triangle dans lequel on travaille
         integer, intent(in) :: num ! numerotation locale du noeud
-        real(rp), dimension(2,3) :: coor, coor_ref
+        !real(rp), dimension(2,3) :: coor, coor_ref
         !integer :: j
 
         quad = 0._rp
@@ -182,7 +182,7 @@ module quadrature_P1
         real(rp), dimension(2,3) :: coor
         real(rp) :: poids
         real(rp) :: quad1, quad2
-        integer :: i, k1
+        integer :: i
         real(rp) :: A1,A2,A3,A4
         real(rp) :: j11, j12, j21, j22
 

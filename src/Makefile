@@ -4,7 +4,7 @@
 CC = gfortran-11
 
 # Options de compilation
-FFLAGS = -O0
+FFLAGS = -O3
 
 # Chemin ou sont stockes les fichiers binaires
 ODIR = ../bin

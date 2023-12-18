@@ -10,8 +10,8 @@ module numerics
     ! - Definition du type mat_creuse
     !--------------------------------------------!
 
-    integer, parameter :: rp = real64
-    real(rp), parameter :: pi = acos(-1._rp)
+    integer, parameter :: rp = real64 ! double precision
+    real(rp), parameter :: pi = acos(-1._rp) ! nombre pi
 
     type mat_creuse
         integer :: Ncoefmat ! dimension de Tmat et Jvcell

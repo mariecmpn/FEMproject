@@ -13,7 +13,8 @@ CONTENU DU DOSSIER:
 - src/quadrature_P2.f90: module en Fortran pour la résolution en élément fini P2-Lagrange
 - src/stockage_creux.f90: module en Fortran pour le stockage creux de la matrice de masse A
 - src/computation.f90: module en Fortran pour la résolution du système linéaire AU=L par la méthode du gradient conjugué et des fonctions utiles pour cet algorithme (norme infinie...)
-- src/read_file.f90: module en Fortran pour la lecture de init.dat.
+- src/read_file.f90: module en Fortran pour la lecture de init.dat
+- init.dat: fichier qui donne au programme les instructions a suivre (P1 ou P2, condition de Dirichlet, type de resolution...)
 - carre.*: fichiers maillage créés avec Triangle
 
 LIBRAIRIES REQUISES:

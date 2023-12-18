@@ -9,6 +9,7 @@ module to_vtk
    ! le post-traitement
    !--------------------------------------------!
 
+   ! Types pour la subroutine CellVertexVtk
 
    type Donnees
       !real(rp) :: Impre
@@ -77,9 +78,7 @@ subroutine recup_nodeel(nomfic, coord, p, t, n_pt, n_tri)
   !--------------------------------------------------------!                                                                                                                                                    
   !    LECTURE DES FICHIERS CARRE.1.NODE ET CARRE.1.ELE    !                                                                                                                                                    
   !--------------------------------------------------------!                                                                                                                                                    
-   !print*, 'Nom du fichier .poly'
-   !read*,nomfic
-  !nomfic = 'carre.3'
+
   lens   = INDEX(nomfic,' ')-1
   str=''
   lens2  = INDEX(str,' ')
@@ -141,13 +140,6 @@ end subroutine points_frontiere
 
 
 SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
-!SUBROUTINE CellVertexVtk(nb_element, nb_triangle, coordonnees, connect, Z, PbName)
-
-   !integer, intent(in) :: nb_element, nb_triangle
-   !integer, dimension(3,nb_triangle), intent(in) :: connect
-   !real(rp), dimension(nb_element, 2), intent(in) :: coordonnees
-   !real(rp), dimension(nb_element), intent(in) :: Z
- 
    TYPE(Donnees)   , INTENT(in)     :: DATA ! 
    TYPE(MeshDef)   , INTENT(in)     :: Mesh !
    CHARACTER(LEN=70), intent(in) :: PbName

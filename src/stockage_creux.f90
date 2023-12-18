@@ -40,23 +40,23 @@ module stockage_matrice
 
         j1 = 0
         j2 = 0
-        do i = 1,nb_element
-            if (positions(i) == 0) then
-                j1 = j1 + 1
-                new_order(j1) = i
+        do i = 1,nb_element ! on parcourt tous les points
+            if (positions(i) == 0) then ! s'il est a l'interieur
+                j1 = j1 + 1 ! on decale le curseur
+                new_order(j1) = i ! on note l'ancien indice
                 inv_new_order(i) = j1
-                new_coor(j1,:) = coordonnees(i,:)
-            else if (positions(i) == 1) then
-                j2 = j2 + 1
-                new_order(j2+dim_mat) = i
+                new_coor(j1,:) = coordonnees(i,:) ! on note les coordonnees
+            else if (positions(i) == 1) then ! s'il est au bord
+                j2 = j2 + 1 ! on decale le curseur
+                new_order(j2+dim_mat) = i ! on note l'ancien indice
                 inv_new_order(i) = j2+dim_mat
-                new_coor(j2+dim_mat,:) = coordonnees(i,:)
+                new_coor(j2+dim_mat,:) = coordonnees(i,:) ! on note les coordonnees
             end if
         end do
 
-        do i = 1,nb_triangle
+        do i = 1,nb_triangle ! on parcourt tous les triangles
             do j = 1,3
-                new_t(j,i) = inv_new_order(connect(j,i))
+                new_t(j,i) = inv_new_order(connect(j,i)) ! on note les nouveaux indices pour chaque triangle
             end do
         end do
     end subroutine ordonne_pts

@@ -25,38 +25,14 @@ module computation
         norme_inf = m
     end function norme_inf
 
-    real(rp) function dot_trans(X, Y, dim_mat)
-        ! fonction qui calcule le produit X^T * Y, ou X et Y sont des veteurs de dimension dim_mat
-        integer :: dim_mat ! dimension des vecteurs
-        real(rp), dimension(dim_mat) :: X,Y ! vecteurs dont on souhaite connaitre le produit
-        integer :: i
-        real(rp) :: d
-        d = 0._rp
-        do i = 1,dim_mat
-            d = d+X(i)*Y(i)
-        end do
-        dot_trans = d
-    end function dot_trans
-
-    function dot_mat_vec(Mat, Vec, dim_mat)
-        integer :: dim_mat
-        real(rp), dimension(dim_mat) :: dot_mat_vec
-        real(rp), dimension(dim_mat, dim_mat) :: Mat
-        real(rp), dimension(dim_mat) :: Vec
-        integer :: i,j
-        dot_mat_vec(:) = 0._rp
-        do j = 1,dim_mat
-            do i = 1,dim_mat
-            dot_mat_vec(i) = dot_mat_vec(i) + Mat(i,j)*Vec(j)
-            end do
-        end do
-    end function dot_mat_vec
 
     real(rp) function prod_scal(vec1, vec2, dim_mat)
+        ! Fonction qui calcule le produit scalaire de deux vecteurs de dimension dim_mat
         integer :: dim_mat
         real(rp), dimension(dim_mat) :: vec1, vec2
         integer :: i
         prod_scal = 0._rp
+        ! on fait la somme de tous les produits
         do i = 1,dim_mat
             prod_scal = prod_scal+ vec1(i)*vec2(i)
         end do
@@ -138,7 +114,7 @@ module computation
         d = -gradJ0
         r = 1.
         iter = 0
-        ! iterations (meme principe que la subroutine gradient conjugue)
+        ! iterations (meme principe que la subroutine gradient_conjugue)
         do while ((r > conv) .AND. (iter < 1000))
             iter = iter + 1
             call prod_matvect_creux(A, dim_mat, d, prod) ! tmp = A.d
