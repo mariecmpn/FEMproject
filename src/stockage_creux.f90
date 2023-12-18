@@ -19,16 +19,24 @@ module stockage_matrice
 
     contains
 
+    !--------------------------------------------!
+    !   Procedure pour ordonner les points
+    !               du maillage
+    !--------------------------------------------!
+
     subroutine ordonne_pts(new_coor, new_order, new_t, coordonnees, nb_element, positions, dim_mat, connect, nb_triangle)
-        integer, intent(in) :: nb_element, dim_mat, nb_triangle
-        real(rp), intent(out), dimension(nb_element,2) :: new_coor
-        integer, intent(out), dimension(nb_element) :: new_order
-        real(rp), intent(in), dimension(nb_element,2) :: coordonnees
-        integer, intent(out), dimension(3,nb_triangle) :: new_t
-        integer, dimension(nb_element), intent(in) :: positions 
-        integer, dimension(3,nb_triangle), intent(in) :: connect
-        integer, dimension(nb_element) :: inv_new_order
-        integer :: i,j,j1,j2
+        ! Subroutine qui ordonne les points du maillage
+        ! Les dim_mat premiers sont les points interieurs
+        !  Les nb_element- dim_mat sont les points sur les bords
+        integer, intent(in) :: nb_element, dim_mat, nb_triangle ! entiers dimensions du probleme: nombre de points, de points interieurs, de triangles
+        real(rp), intent(out), dimension(nb_element,2) :: new_coor ! tableau des coordonnees nouvellement ordonnees
+        integer, intent(out), dimension(nb_element) :: new_order ! tableau qui donne le nouvel ordre des points par rapport a l'ancien
+        real(rp), intent(in), dimension(nb_element,2) :: coordonnees ! tableau des coordonnees dans l'ancien ordre
+        integer, intent(out), dimension(3,nb_triangle) :: new_t ! tableau des triangles avec la nouvelle numerotation
+        integer, dimension(nb_element), intent(in) :: positions  ! tableau des positions dans l'ancien ordre
+        integer, dimension(3,nb_triangle), intent(in) :: connect ! tableau des triangles avec l'ancienne numerotation
+        integer, dimension(nb_element) :: inv_new_order ! tableau inverse de new_order: donne l'ancien ordre des points par rapport au nouveau
+        integer :: i,j,j1,j2 ! pour boucles do
 
         j1 = 0
         j2 = 0
@@ -125,6 +133,7 @@ module stockage_matrice
 
     subroutine remplissage_NUBO_peu_cher(NUBO, nb_element, nb_triangle, connect, Nseg)
         ! Remplissage de NUBO avec l'algorithme moins cher mais plus complique
+        ! Ne marche pas
         integer, dimension(:,:), allocatable, intent(inout) :: NUBO ! tableau qui contient les sommets de tous les segments
         integer, intent(in) :: nb_element, nb_triangle
         integer, dimension(3,nb_triangle), intent(in) :: connect
@@ -223,7 +232,7 @@ module stockage_matrice
 
         ! Calcul de NcoefMat
         NcoefMat=dim_mat ! contribution des termes diagonaux a_ii 
-        do iseg=1,Nseg
+        do iseg=1,Nseg ! contribution des termes extra-diagonaux
             is=NUBO(1,iseg) 
             js=NUBO(2,iseg)
             if (is<=dim_mat .and. js<=dim_mat) then
@@ -244,6 +253,7 @@ module stockage_matrice
         integer, dimension(:), allocatable :: IndPL
         integer :: iseg, js, is, jv, kv, tmp
 
+        ! on remplit Jposi
         do is=1,dim_mat+1
             Jposi(is)=is
         end do
@@ -256,6 +266,7 @@ module stockage_matrice
             end if
         end do
 
+        ! Puis on remplit JvCell
         ! Initialisation de IndPL
         allocate(IndPL(1:dim_mat))
         IndPL(1:dim_mat)=Jposi(1:dim_mat)

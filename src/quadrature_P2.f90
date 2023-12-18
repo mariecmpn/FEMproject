@@ -156,7 +156,7 @@ module quadrature_P2
         real(rp) :: A1,A2,A3,A4
         real(rp) :: j11, j12, j21, j22
 
-        poids = (1._rp/12._rp)*abs(det_Jac(coor_triangle))
+        poids = (1._rp/6._rp)*abs(det_Jac(coor_triangle))
         ! on recupere les termes de l'inverse de la matrice jacobienne
         j11 = inv_jac(coor_triangle,1,1)
         j12 = inv_jac(coor_triangle,1,2)

@@ -21,13 +21,13 @@ module quadrature_P1
 
     real(rp) function f(coor)
         real(rp), dimension(2) :: coor
-        f = 0.5_rp*pi*pi*sin(pi*coor(1))*sin(pi*coor(2))
+        f = (0.5_rp*pi**2)*sin(pi*coor(1))*sin(pi*coor(2))
         !f = 2._rp
     end function f
 
-    real(rp) function u_ex(x,y)
-        real(rp) :: x,y
-        u_ex = 0.25_rp*sin(pi*x)*sin(pi*y)
+    real(rp) function u_ex(x,y, cond)
+        real(rp) :: x,y, cond
+        u_ex = 0.25_rp*sin(pi*x)*sin(pi*y)+cond
     end function u_ex
 
     !--------------------------------------------!
@@ -190,7 +190,7 @@ module quadrature_P1
         quad = 0._rp
         quad1 = 0._rp
         quad2 = 0._rp
-        poids = (1._rp/2._rp)
+        poids = (1._rp/3._rp)
         ! on recupere les termes de l'inverse de la matrice jacobienne
         j11 = inv_jac(coor_triangle,1,1)
         j12 = inv_jac(coor_triangle,1,2)
@@ -223,6 +223,7 @@ module quadrature_P1
         ! on multiplie le tout par le poids
         quad = quad*poids*abs(det_Jac(coor_triangle))
     end subroutine quadrature_triangle_A
+
 
 
 

@@ -220,30 +220,32 @@ SUBROUTINE CellVertexVtk(DATA, Mesh, PbName)
    !           Post-traitement
    !--------------------------------------------!
 
-   subroutine recup_vect_U(U, L, points_int, nb_element, dim_mat)
+   subroutine recup_vect_U(U, L, nb_element, dim_mat, c)
       ! subroutine pour recuperer le vecteur U des solutions avec les points interieurs et sur la frontiere
       integer, intent(in) :: nb_element, dim_mat 
       real(rp), dimension(nb_element), intent(inout) :: U ! vecteur U avec les solutions pour tous les points
       real(rp), dimension(dim_mat), intent(in) :: L ! vecteur L avec les solutions des points interieurs
-      integer, dimension(dim_mat), intent(in) :: points_int
-      integer :: i
+      !integer, dimension(dim_mat), intent(in) :: points_int
+      real(rp), intent(in) :: c
+      !integer :: i
 
-      U(1:dim_mat) = L(:)
-      U(dim_mat+1:nb_element) = 0._rp
+      U(1:dim_mat) = L(:) + c
+      U(dim_mat+1:nb_element) = c
       !do i =1,dim_mat
       !   U(points_int(i)) = L(i)
       !end do
    end subroutine recup_vect_U
 
-   subroutine recup_vect_U_P2(U, L, tous_pts_int, nb_element, dim_matP2, Nseg)
+   subroutine recup_vect_U_P2(U, L, tous_pts_int, nb_element, dim_matP2, Nseg, cond)
       integer, intent(in) :: nb_element, dim_matP2, Nseg
       real(rp), dimension(nb_element), intent(inout) :: U ! vecteur U avec les solutions pour tous les points
       real(rp), dimension(dim_matP2), intent(in) :: L ! vecteur L avec les solutions des points interieurs
       integer, dimension(dim_matP2), intent(in) :: tous_pts_int
       integer :: i
       real(rp), dimension(nb_element+Nseg) :: U_m
+      real(rp), intent(in) :: cond
 
-      U_m(:) = 0._rp
+      U_m(:) = cond
       do i =1,dim_matP2
          U_m(tous_pts_int(i)) = L(i)
       end do
