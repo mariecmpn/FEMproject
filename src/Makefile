@@ -28,7 +28,7 @@ $(PROG) : $(OBJS)
 
 # regle clean pour supprimer les fichiers binaires et executable
 clean:
-	rm $(ODIR)/*.o
+	rm $(ODIR)/*.o $(EXEDIR)/$(PROG)
 
 # Regles construction des fichiers binaires
 $(ODIR)/main.o: main.f90 stockage_creux.f90 quadrature_P2.f90 quadrature.f90 recup_node.f90 computation.f90 numerics.f90

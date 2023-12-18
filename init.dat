@@ -1,6 +1,6 @@
-carre.4  :: nom du fichier de maillage
+carre.5  :: nom du fichier de maillage
 graphe   :: nom du fichier vtk contenant la solution approchee
-0        :: Stockage de la matrice: 0 pour normal, 1 pour creux
+1        :: Stockage de la matrice: 0 pour normal, 1 pour creux
 1        :: degre des elements finis: 1 pour P1 et 2 pour P2
-1.0      :: condition de Dirichlet (doit etre une constante)
-L        :: Resolution du systeme lineaire (pour le stockage normal): 'G' pour gradient conjugue (par defaut), 'L' pour resolution avec Lapack
+0.0      :: condition de Dirichlet (doit etre une constante)
+G        :: Resolution du systeme lineaire (pour le stockage normal): 'G' pour gradient conjugue (par defaut), 'L' pour resolution avec Lapack
