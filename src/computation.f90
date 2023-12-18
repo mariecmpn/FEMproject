@@ -99,68 +99,57 @@ module computation
 
  
     subroutine prod_matvect_creux(mat, n, X, Y)
-        ! Subroutine qui calcule le produit de d'une matrice en stockage creux mat par un vecteur X
+        ! Subroutine qui calcule le produit d'une matrice en stockage creux mat par un vecteur X
         type(mat_creuse), intent(in) :: mat
         integer, intent(in) :: n
         real(rp), dimension(n), intent(in) :: X
         real(rp), dimension(n), intent(out) :: Y
-        integer :: i, j, jj, non0
+        integer :: i, j
         integer :: c = 0 ! Indicateur de position dans A
         
+        ! initialisation
         Y = 0._rp
-        !curseur = 0
-        !i = 1
-        j = 0
         c = 0
+        ! boucle
         do i = 1,n
-            !non0 = mat%Jposi(i+1) - mat%Jposi(i)
             do j = mat%Jposi(i), mat%Jposi(i+1)-1
-                !jj = mat%JvCell(j)
                 Y(i) = Y(i) + mat%Tmat(j)*X(mat%JvCell(j))
             end do
         end do
-        !DO WHILE (curseur < mat%NCoefMat)
-        !    non0 = mat%Jposi(i+1) - mat%Jposi(i)
-        !    do ii = 1,non0
-        !        curseur = curseur + 1
-        !        j = mat%JvCell(curseur) ! Colonne du terme non-nul où est le curseur
-        !        Y(i) = Y(i) + mat%Tmat(curseur) * X(j)
-        !    end do
-        !    i = i+1
-        !END DO
-        
     end subroutine prod_matvect_creux
 
   
 
-    SUBROUTINE Gradient_conjugue_CREUX (A, Y, conv, dim_mat)
-        IMPLICIT NONE
-        INTEGER, INTENT(in)             ::  dim_mat
-        type(mat_creuse), INTENT(in)         ::  A
-        REAL(rp), DIMENSION(dim_mat), INTENT(inout)  ::  Y
-        REAL(rp), DIMENSION(dim_mat) ::  X
-        REAL(rp), DIMENSION(dim_mat) :: d, gradJ0, gradJ1, prod
-        REAL(rp) :: rho, r
-        INTEGER :: iter
+    subroutine gradient_conjugue_creux (A, L, conv, dim_mat)
+        ! subroutine qui calcule la solution de AX=L par gradient conjugue pour A matrice en stockage creux
+        integer, intent(in)             ::  dim_mat
+        type(mat_creuse), intent(in)         ::  A ! matrice A en stockage creux
+        real(rp), dimension(dim_mat), intent(inout)  ::  L ! en entree: vecteur second membre L. En sortie: vecteur solution X
+        real(rp), dimension(dim_mat) ::  X ! vecteur solution X qu'on affecte a L a la fin
+        real(rp), dimension(dim_mat) :: d, gradJ0, gradJ1, prod
+        real(rp) :: rho, r
+        integer :: iter
         real(rp), intent(in) :: conv
         
+        ! initialisation
         X = 0.
-        CALL prod_matvect_creux(A, dim_mat, X, prod) 
-        gradJ0 = prod - Y
+        call prod_matvect_creux(A, dim_mat, X, prod) 
+        gradJ0 = prod - L
         d = -gradJ0
         r = 1.
         iter = 0
-        DO WHILE ((r > conv) .AND. (iter < 1000))
+        ! iterations (meme principe que la subroutine gradient conjugue)
+        do while ((r > conv) .AND. (iter < 1000))
             iter = iter + 1
-            CALL prod_matvect_creux(A, dim_mat, d, prod) ! tmp = A.d
+            call prod_matvect_creux(A, dim_mat, d, prod) ! tmp = A.d
             rho = -prod_scal(gradJ0, d, dim_mat) / prod_scal(d, prod, dim_mat)
             X = X + rho * d
             gradJ1 = gradJ0 + rho * prod
             d = -gradJ1 + sum(gradJ1**2) / sum(gradJ0**2) * d
             r = norme_inf(gradJ1, dim_mat)
             gradJ0 = gradJ1
-        END DO
-        Y = X
+        end do
+        L = X
         write(6,*) 'Nombre d iterations gradient conjugue: ', iter
     END SUBROUTINE Gradient_Conjugue_CREUX
 
